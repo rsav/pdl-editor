@@ -1,0 +1,101 @@
+	
+				String name = new String("");
+				while (name.isEmpty()) {
+					name = JOptionPane.showInputDialog(appFrame,"Name of the new parameter ?",null);
+					if(name==null) {
+						//System.out.println("User hit CANCEL");
+						break; // exit this while block because user selected CANCEL
+					}
+					if(name.isEmpty()) {
+						JOptionPane.showMessageDialog(appFrame, "The new parameter must have a name!");
+						break; // exit this while block 
+					}
+				}
+				if(name!=null && !name.isEmpty()) { // if a name was entered by the user
+					
+					// check the name is not already used
+					boolean nameUsed=false;
+					for(int p=0; p<comboBoxModelParams.getSize(); p++) {
+						String theName = (String) ((PDLParameter) comboBoxModelParams.getElementAt(p)).getName();
+						System.out.println("DEBUG PDLEditorApp.initialize: checking collision with name="+theName);
+						if(name.equals(theName)) {
+							JOptionPane.showMessageDialog(appFrame,"There is already a parameter with the name: "+name,"Error",JOptionPane.ERROR_MESSAGE);
+							nameUsed=true;
+							break;
+						}
+					}
+					
+					if(nameUsed==false) {
+						PDLParameter newParam = new PDLParameter(name);
+						comboBoxModelParams.addElement(newParam);
+						comboBoxParams.setSelectedItem(newParam); // select the new param in the combo box
+					} else {
+						// giving up
+					}
+				} // if
+				
+				
+				
+				
+				
+				
+textFieldExpName.addActionListener(new ActionListener() {
+			
+			// upon change of name, update the combobox
+			public void actionPerformed(ActionEvent e) {
+				//System.out.println("textfield action "+e.toString());
+				String selExpName = (String)comboBoxExps.getSelectedItem();
+				
+				
+				
+				if(selExpName==null) {
+					JOptionPane.showMessageDialog(appFrame,"No expression selected. Cannot change name","Error",JOptionPane.ERROR_MESSAGE);
+					textFieldExpName.setText("");
+				} else {
+					
+					
+					
+					 // check if the expression is used in a criterion
+					 ArrayList<String> critNamesWhereExpUsed = getCritsWhereExpIsUsed(listModelCrits, selExpName);
+					 
+					
+					 
+					 
+					 if(!critNamesWhereExpUsed.isEmpty()) { // the expression is used in some criterion
+						 JOptionPane.showMessageDialog(appFrame,"Cannot change name of expression "+selExpName+" because it's used in the following criterions: \n"+critNamesWhereExpUsed,"Error",JOptionPane.ERROR_MESSAGE);
+						 textFieldExpName.setText(selExpName); // set the textfield back to the old name
+						 
+					 } else {	 // the expression is not used in any criterion
+					 
+					
+						// check the name is not already used
+						boolean nameUsed=false;
+						for(int ne=0; ne<comboBoxModelExps.getSize(); ne++) {
+							String theName = (String) comboBoxModelExps.getElementAt(ne);
+							System.out.println("DEBUG PDLEditorApp.initialize: checking collision with name="+theName);
+							if(textFieldExpName.getText().equals(theName)) {
+								JOptionPane.showMessageDialog(appFrame,"There is already a parameter with the name: "+theName,"Error",JOptionPane.ERROR_MESSAGE);
+								nameUsed=true;
+								textFieldExpName.setText(selExpName); // set the textfield back to the old name
+								break;
+							}
+						}
+						
+						
+						if(nameUsed==false) {
+							String newName = e.getActionCommand();
+							System.out.println("DEBUG PDLEditor.initialize: setting new name to "+newName);
+							Expression exp = mapExps.get(selExpName); // keep the expression
+							mapExps.remove(selExpName); // remove expression from the hash
+							comboBoxModelExps.actionPerformed(new ActionEvent(textFieldExpName,0,"update"));
+							mapExps.put(newName, exp);  // put it back under its new name
+							comboBoxModelExps.actionPerformed(new ActionEvent(textFieldExpName,0,"update"));
+							comboBoxExps.setSelectedItem(newName);
+							comboBoxExps.repaint(); // repaint the combobox because it displays the name
+						}
+					}
+				}
+			}
+		});
+		
+		
