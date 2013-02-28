@@ -6,6 +6,22 @@ public class PDLCriterion {
 
 	
 	
+	public boolean isReached() {
+		return reached;
+	}
+
+	public String getCriterion() {
+		return criterion;
+	}
+
+	public String getConnector() {
+		return connector;
+	}
+
+	public String getType() {
+		return type;
+	}
+
 	String name;
 	String cexp;	// hold the name of the expression concerned by the criterion
 	ArrayList<String> exps; // holds the names of the expressions used

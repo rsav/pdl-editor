@@ -56,6 +56,7 @@ import net.ivoa.pdl.editor.objectModel.PDLGroup;
 import net.ivoa.pdl.editor.objectModel.PDLParameter;
 import net.ivoa.pdl.editor.objectModel.PDLService;
 import net.ivoa.pdl.editor.objectModel.PDLStatement;
+import net.ivoa.pdl.editor.wrapperToPDL.ParameterWrapper;
 import net.ivoa.pdl.editor.guiComponent.GroupsTreeModelListener;
 
 import org.neodatis.odb.ODB;
@@ -224,6 +225,7 @@ public class PDLEditorApp {
 					// populate comboBoxModelServiceInputs and comboBoxModelServiceOutputs
 					initComboBoxService(comboBoxModelServiceInputs,treeModelGroups);
 					initComboBoxService(comboBoxModelServiceOutputs,treeModelGroups);
+					
 					
 					// perform selection in comboBoxModelServiceInputs and comboBoxModelServiceOutputs
 					System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring inputs group and output groups");
