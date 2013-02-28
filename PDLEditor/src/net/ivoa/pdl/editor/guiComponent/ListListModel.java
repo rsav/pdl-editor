@@ -1,16 +1,6 @@
 package net.ivoa.pdl.editor.guiComponent;
 
-/*
-live collections aware combo box
 
-create demo prog that loads up a set of combo boxes
-load in any list or iterator or set
-load in a map and track keys vs values
-
-
-this is really two hacks?
-
-*/
 
 import java.util.*;
 import java.util.ArrayList;
@@ -22,19 +12,19 @@ import javax.swing.event.*;
 
 
 /**
- * from http://jcs.mobile-utopia.com/jcs/s/ListComboBoxModel
- * @author user
+ * from MapListModel
  *
  */
-public class ListComboBoxModel implements ComboBoxModel, ActionListener {
+public class ListListModel implements ListModel, ActionListener {
 
-	ListComboBoxModel() {
+	ListListModel() {
 	    this.listeners = new ArrayList();
 	    data = new ArrayList();
 	}
 	
 	protected List data;
-	public ListComboBoxModel(List list) {
+	
+	public ListListModel(List list) {
 	    this();
 	    this.data = list;
 	    if(list.size() > 0) {

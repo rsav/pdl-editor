@@ -154,9 +154,13 @@ public class CriterionDialog extends JDialog {
 		comboBoxCExp.setBounds(30, 98, 167, 27);
 		getContentPane().add(comboBoxCExp);
 		
-		final JCheckBox chckbxReached = new JCheckBox("Reached");
-		chckbxReached.setBounds(321, 48, 128, 23);
-		getContentPane().add(chckbxReached);
+		final JCheckBox chckbxReachedSup = new JCheckBox("ReachedSup");
+		chckbxReachedSup.setBounds(386, 48, 128, 23);
+		getContentPane().add(chckbxReachedSup);
+		
+		final JCheckBox chckbxReachedInf = new JCheckBox("ReachedInf");
+		chckbxReachedInf.setBounds(283, 48, 128, 23);
+		getContentPane().add(chckbxReachedInf);
 		
 		
 		// populate combo box with names of available expressions
@@ -201,7 +205,8 @@ public class CriterionDialog extends JDialog {
 						String newType =(String) comboBoxCond.getSelectedItem();
 						
 						// get if this criterion is reached
-						boolean newReached = chckbxReached.isSelected();
+						boolean newReachedInf = chckbxReachedInf.isSelected();
+						boolean newReachedSup = chckbxReachedSup.isSelected();
 						
 						// get the selected expressions in expression1 and add them to the crit
 						
@@ -258,7 +263,8 @@ public class CriterionDialog extends JDialog {
 							newCrit.setType(newType);
 							
 							// add is this criterion is reached (for ValueLargerThan and ValueSmallerThan)
-							newCrit.setReached(newReached);
+							newCrit.setReachedInf(newReachedInf);
+							newCrit.setReachedInf(newReachedSup);
 							
 							// add the name of the expression concerned by the criterion
 							newCrit.setCExp((String)comboBoxCExp.getSelectedItem());
