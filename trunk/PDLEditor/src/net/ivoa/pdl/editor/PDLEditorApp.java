@@ -740,7 +740,7 @@ public class PDLEditorApp {
 		testParam1.setSkoss("skoss1");
 		testParam1.setPrecision("_one");
 		testParam1.setDimension("_one");
-		mapParams.put("TestParam1", testParam1);
+		mapParams.put("TP1", testParam1);
 		
 		// add a dummy param for testing
 		System.out.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam2");
@@ -752,7 +752,7 @@ public class PDLEditorApp {
 		testParam2.setSkoss("skoss2");
 		testParam2.setPrecision("_one");
 		testParam2.setDimension("_one");
-		mapParams.put("TestParam2", testParam2);
+		mapParams.put("TP2", testParam2);
 		
 		comboBoxModelParams = new MapComboBoxModel(mapParams);
 		comboBoxParams = new JComboBox(comboBoxModelParams);
@@ -1065,13 +1065,13 @@ public class PDLEditorApp {
 		
 		// for debug
 		PDLGroup testGroup1 = new PDLGroup("TG1");
-		testGroup1.addPDLParam("TestParam1");
+		testGroup1.addPDLParam("TP1");
 		DefaultMutableTreeNode testNode1 = new DefaultMutableTreeNode(testGroup1);
 		treeModelGroups.insertNodeInto(testNode1, (MutableTreeNode) treeModelGroups.getRoot() , 0);
 								
 		// for debug
 		PDLGroup testGroup2 = new PDLGroup("TG2");
-		testGroup2.addPDLParam("TestParam2");
+		testGroup2.addPDLParam("TP2");
 		DefaultMutableTreeNode testNode2 = new DefaultMutableTreeNode(testGroup2);
 		treeModelGroups.insertNodeInto(testNode2, (MutableTreeNode) treeModelGroups.getRoot() , 1);
 		

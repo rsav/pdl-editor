@@ -6,27 +6,16 @@ public class PDLCriterion {
 
 	
 	
-	public boolean isReached() {
-		return reached;
-	}
 
-	public String getCriterion() {
-		return criterion;
-	}
-
-	public String getConnector() {
-		return connector;
-	}
-
-	public String getType() {
-		return type;
-	}
 
 	String name;
 	String cexp;	// hold the name of the expression concerned by the criterion
 	ArrayList<String> exps; // holds the names of the expressions used
 	String type;    // type of the criterion
-	boolean reached;	// for ValueLargerThan and ValueSmallerThan, is the equality valid ?
+	boolean reachedInf;	// for ValueLargerThan, is the equality valid ?
+	boolean reachedSup; // for ValueSmallerThan, is the equality valid ?
+	
+
 	String connector; // connector with other criterion
 	String criterion; // other criterion
 	
@@ -67,13 +56,13 @@ public class PDLCriterion {
 		}
 		
 		if(type.equals("ValueLargerThan")) {
-			if(reached) dtype="Equal or larger than";
+			if(reachedSup) dtype="Equal or larger than";
 			else dtype="Larger than";
 			dexps=exps.get(0); // get the 1st expression of the list
 		}
 		
 		if(type.equals("ValueSmallerThan")) {
-			if(reached) dtype="Equal or smaller than";
+			if(reachedInf) dtype="Equal or smaller than";
 			else dtype="Smaller than";
 			dexps=exps.get(0); // get the 1st expression of the list
 		}		
@@ -128,9 +117,38 @@ public class PDLCriterion {
 		criterion = c;	
 	}
 
-	public void setReached(boolean r) {
-		reached = r;
+	public void setReachedInf(boolean r) {
+		reachedInf = r;
 		
 	}
+	
+	
+	public boolean isReachedInf() {
+		return reachedInf;
+	}
+
+	
+	public boolean isReachedSup() {
+		return reachedSup;
+	}
+
+	public void setReachedSup(boolean r) {
+		reachedSup = r;
+	}
+	
+	
+	public String getCriterion() {
+		return criterion;
+	}
+
+	public String getConnector() {
+		return connector;
+	}
+
+	public String getType() {
+		return type;
+	}
+	
+	
 	
 }

@@ -1,3 +1,16 @@
+v0.3 TODO
+- dans Criterion Module (PDLCriterion.java; CriterionDialog.java)
+  - utiliser une map des criterions Map<String,PDLCriterion>
+  - reachedInf and reachedSup a la place de reached
+- dans Group Module ajouter method retournant
+  - Map<groupName,parameterName>
+  - Map<groupName,PDLParameter>
+  
+  
+  
+
+
+
 v0.2 2013-02-21 
 - added CMZ as author in the about box
 - new button + dialog for creating AtomicConstantExpression

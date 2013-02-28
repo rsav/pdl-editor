@@ -3,22 +3,26 @@ package net.ivoa.pdl.editor.guiComponent;
 import java.util.*;
 import java.awt.event.*;
 
+import javax.swing.AbstractListModel;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
+
 
 /**
- * from http://jcs.mobile-utopia.com/jcs/s/ListComboBoxModel
- * @author user
+ * Model for a hash-aware JList
+ * from MapComboBoxModel.java
  *
  */
-public class MapComboBoxModel extends ListComboBoxModel {
+public class MapListModel extends ListListModel {
 
     protected Map map_data;
     protected List index;
-    public MapComboBoxModel() {
+    public MapListModel() {
         this.map_data = new HashMap();
         index = new ArrayList();
     }
 
-    public MapComboBoxModel(Map map) {
+    public MapListModel(Map map) {
         this.map_data = map;
         buildIndex();
         if(index.size() > 0) {
@@ -53,6 +57,7 @@ public class MapComboBoxModel extends ListComboBoxModel {
     public Object getValue(int selectedItem) {
         return getValue(index.get(selectedItem));
     }
-}
+    
 
-	
+    
+}
