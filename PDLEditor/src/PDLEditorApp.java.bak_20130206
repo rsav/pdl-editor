@@ -1,0 +1,740 @@
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import java.awt.FlowLayout;
+import java.awt.GridBagLayout;
+import javax.swing.BoxLayout;
+import javax.swing.JOptionPane;
+import javax.swing.JSplitPane;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JLabel;
+import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import javax.swing.JPopupMenu;
+import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JButton;
+import javax.swing.AbstractAction;
+import java.awt.event.ActionEvent;
+import javax.swing.Action;
+import javax.swing.JComboBox;
+import javax.swing.JTextField;
+import java.awt.event.ActionListener;
+import java.awt.GridLayout;
+import java.awt.CardLayout;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JTree;
+import javax.swing.JScrollPane;
+import javax.swing.event.TreeModelListener;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreeSelectionModel;
+
+
+//import PDLParameter;
+
+
+public class PDLEditorApp {
+
+	
+	
+	private JFrame frame;
+
+	
+	
+	private JTextField textFieldName;
+	private JComboBox comboBoxType;
+	private JTextField textFieldUCD;
+	private JTextField textFieldUType;
+	
+	private JTextField textFieldSkoss;
+	private JTextField textFieldUnit;
+	private JTextField textFieldPrecision;
+	private JTextField textFieldDimension;
+	
+
+	private JComboBox comboBoxParams;
+	private JTree treeGroups;
+	private DefaultMutableTreeNode rootNode;
+	private DefaultTreeModel treeModelGroups;
+	
+	
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					PDLEditorApp window = new PDLEditorApp();
+					window.frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	
+	/**
+	 * print the groups tree with the parameters used  
+	 * @param root - the root node of the tree
+	 */
+	public void printGroupsTree(DefaultMutableTreeNode root) {
+		
+	    System.out.println(root+" "+((PDLGroup) root.getUserObject()).getParams());
+	    Enumeration children = root.children();
+	    if (children != null) {
+	      while (children.hasMoreElements()) {
+	    	  printGroupsTree((DefaultMutableTreeNode) children.nextElement());
+	      }
+	    }
+	  }
+	
+	
+	/**
+	 * get the groups where a parameter is used (recursive call)
+	 * @param root root of the tree to search
+	 * @param param parameter to search
+	 * @param list list of group where the param is used, to be initialized by caller
+	 * @return list of groups where the param is used
+	 */
+	public ArrayList<String> getGroupsWhereParamIsUsed(DefaultMutableTreeNode root, String param, ArrayList<String> list) {
+		
+		
+		
+		System.out.println("DEBUG PDLEditorApp.getGroupsWhereParamIsUsed: "+root+" "+((PDLGroup) root.getUserObject()).getParams());
+	    
+		ArrayList<String> params = (ArrayList<String>) ((PDLGroup) root.getUserObject()).getParams();
+		if(params.contains(param)) {
+			System.out.println("DEBUG PDLEditorApp.getGroupsWhereParamIsUsed: Found param "+param+" in node "+root);
+			list.add(root.toString());
+		}
+		
+		Enumeration children = root.children();
+	    if (children != null) {
+	      while (children.hasMoreElements()) {
+	    	  ArrayList<String> l = getGroupsWhereParamIsUsed((DefaultMutableTreeNode) children.nextElement(), param, list);
+	    	  
+	      }
+	    }
+		
+		return list;
+	}
+	
+	
+	
+	/**
+	 * get the params and in which groups they are used
+	 * @param comboBoxParams - the JComboBox where the params are stored
+	 * @param treeModelGroups - the TreeModel where the groups are stored
+	 * @return
+	 */
+	public HashMap<String,List<String>> getParamsAndUsageInGroups(JComboBox comboBoxParams, DefaultTreeModel treeModelGroups) {
+		
+		HashMap<String,List<String>> hash = new HashMap<String, List<String>>();
+		
+		// populate the hash with the params
+		for(int i=0;i<comboBoxParams.getItemCount();i++) {
+			String paramName = comboBoxParams.getItemAt(i).toString();
+			hash.put(paramName,null); // null means the param is not yet found in a group
+		}
+		
+		Set<String> set = hash.keySet();
+		
+		
+		Iterator<String> iterator = set.iterator();
+		if(iterator!=null) {
+			
+			while(iterator.hasNext()) {
+				String key = (String) iterator.next();
+				
+				System.out.println("DEBUG PDLEditorApp.getParamsAndUsageInGroups: searching for param "+key);
+				
+				ArrayList<String> list = new ArrayList<String>();
+				list = getGroupsWhereParamIsUsed((DefaultMutableTreeNode) treeModelGroups.getRoot(), key, list);
+		
+				hash.put(key, list);
+			
+			}
+		}
+		
+		
+		
+		
+		return hash;
+		
+		
+	}
+	
+	
+	/**
+	 * Create the application.
+	 */
+	public PDLEditorApp() {
+		initialize();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+		frame = new JFrame();
+		frame.setBounds(100, 100, 984, 514);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().setLayout(null);
+		
+		JSplitPane splitPane = new JSplitPane();
+		splitPane.setBounds(6, 46, 430, 209);
+		frame.getContentPane().add(splitPane);
+		
+		JPanel panelParamsMenu = new JPanel();
+		panelParamsMenu.setLayout(new GridLayout(0, 1, 0, 0));
+
+		splitPane.setLeftComponent(panelParamsMenu);
+
+		comboBoxParams = new JComboBox();
+		
+		// add a dummy param for testing
+		PDLParameter testParam1 = new PDLParameter("TestParam1");
+		testParam1.setType("integer");
+		testParam1.setUCD("ucd1");
+		testParam1.setUType("utype1");
+		testParam1.setUnit("unit1");
+		testParam1.setSkoss("skoss1");
+		testParam1.setPrecision("precision1");
+		testParam1.setDimension("dimension1");
+		comboBoxParams.addItem(testParam1);
+		
+		// add a dummy param for testing
+		PDLParameter testParam2 = new PDLParameter("TestParam2");
+		testParam2.setType("float");
+		testParam2.setUCD("ucd2");
+		testParam2.setUType("utype2");
+		testParam2.setUnit("unit2");
+		testParam2.setSkoss("skoss2");
+		testParam2.setPrecision("precision2");
+		testParam2.setDimension("dimension2");
+		comboBoxParams.addItem(testParam2);
+		
+		
+		comboBoxParams.setSelectedIndex(-1); // no selected item at first
+		
+		
+		// when parameter is selected, update its fields
+		comboBoxParams.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String cmd=e.getActionCommand();
+				if(cmd=="comboBoxChanged") {
+					PDLParameter selParam=(PDLParameter)comboBoxParams.getSelectedItem();
+					if(selParam!=null) {
+						
+						
+						textFieldName.setText(selParam.getName());
+						comboBoxType.setSelectedItem(selParam.getType());
+						textFieldUCD.setText(selParam.getUCD());
+						textFieldUType.setText(selParam.getUType());
+						textFieldSkoss.setText(selParam.getSkoss());
+						textFieldUnit.setText(selParam.getUnit());
+						textFieldPrecision.setText(selParam.getPrecision());
+						textFieldDimension.setText(selParam.getDimension());
+						
+						
+					}
+				}
+				//System.out.println("combobox action "+e.toString());
+			}
+		});
+		
+		
+		
+		panelParamsMenu.add(comboBoxParams);
+
+		
+		
+		
+		JLabel label = new JLabel("");
+		panelParamsMenu.add(label);
+		
+		JButton btnDelParam = new JButton("Delete Parameter");
+		btnDelParam.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				 PDLParameter selParam = (PDLParameter)comboBoxParams.getSelectedItem();
+				 if(selParam!=null) {
+					 String name = selParam.getName();
+					 
+					 // check if the param is used in a group
+					 //treeModelGroups.
+					 //printGroupsTree((DefaultMutableTreeNode) treeModelGroups.getRoot());
+					 
+					 HashMap<String,List<String>> hash = getParamsAndUsageInGroups(comboBoxParams,treeModelGroups);
+					 System.out.println("DEBUG PDLEditorApp.initialize: Checking for parameter usage in groups: hash="+hash.toString());
+					 
+					 System.out.println("DEBUG PDLEditorApp.initialize: Param "+name+" is used in groups="+hash.get(name));
+					 
+					 
+					 if(!hash.get(name).isEmpty()) { // if the param is used in a group
+						 
+						 // get the groups where it's used
+						 ArrayList<String> groups = (ArrayList<String>) hash.get(name);
+						 
+						 JOptionPane.showMessageDialog(frame,"Cannot delete parameter "+name+" because it's used in the following groups: \n"+groups,"Error",JOptionPane.ERROR_MESSAGE);
+						 
+					 } else { // the param is not used in any group
+					 
+					 
+					     int option = JOptionPane.showConfirmDialog(frame,"Are you sure you want to delete parameter "+name+" ?","Confirmation",JOptionPane.OK_CANCEL_OPTION);
+					     if(option==JOptionPane.OK_OPTION) {
+					    	 
+					    	 comboBoxParams.removeItem(comboBoxParams.getSelectedItem());
+					    	 
+					    	// check if there is still a parameter selected, if not clear the fields
+					    	 PDLParameter selParam1 = (PDLParameter) comboBoxParams.getSelectedItem();
+					    	 if(selParam1==null) { 
+					    		textFieldName.setText("");
+								comboBoxType.setSelectedIndex(-1); // nothing selected
+								textFieldUCD.setText("");
+								textFieldUType.setText("");
+								textFieldSkoss.setText("");
+								textFieldUnit.setText("");
+								textFieldPrecision.setText("");
+								textFieldDimension.setText("");
+								
+								
+					    	 }
+					    	 
+					     }
+					     
+					 } 
+					     
+				 } else {
+					 JOptionPane.showMessageDialog(frame,"No parameter selected","Error",JOptionPane.ERROR_MESSAGE);
+				 }
+			}
+			
+		});
+		
+		
+		JButton btnNewParam = new JButton("New Parameter");
+		btnNewParam.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String name = new String("");
+				while (name.isEmpty()) {
+					name = JOptionPane.showInputDialog(frame,"Name of the new parameter ?",null);
+					if(name==null) {
+						//System.out.println("User hit CANCEL");
+						break; // exit this while block because user selected CANCEL
+					}
+					if(name.isEmpty()) {
+						JOptionPane.showMessageDialog(frame, "The new parameter must have a name!");
+					}
+				}
+				if(name!=null) { // if a name was entered by the user
+					PDLParameter newParam = new PDLParameter(name);
+					comboBoxParams.addItem(newParam);
+					comboBoxParams.setSelectedItem(newParam); // select the new param in the combo box
+					
+				}
+			}
+			
+		});
+		
+		panelParamsMenu.add(btnNewParam);
+		panelParamsMenu.add(btnDelParam);
+		
+		
+		JPanel panelParamsProperties = new JPanel();
+		splitPane.setRightComponent(panelParamsProperties);
+		panelParamsProperties.setLayout(null);
+		
+		JLabel lblName = new JLabel("Name: ");
+		lblName.setBounds(6, 12, 44, 16);
+		panelParamsProperties.add(lblName);
+		
+		textFieldName = new JTextField();
+		textFieldName.setBounds(119, 6, 134, 28);
+		textFieldName.setColumns(10);
+		textFieldName.addActionListener(new ActionListener() {
+			
+			// upon change of name, update the combobox
+			public void actionPerformed(ActionEvent e) {
+				//System.out.println("textfield action "+e.toString());
+				PDLParameter selParam = (PDLParameter)comboBoxParams.getSelectedItem();
+				if(selParam==null) {
+					JOptionPane.showMessageDialog(frame,"No parameter selected. Cannot change name","Error",JOptionPane.ERROR_MESSAGE);
+					textFieldName.setText("");
+				} else {
+					selParam.setName(e.getActionCommand());
+					comboBoxParams.repaint(); // repaint the combobox because it displays the name
+				}
+			}
+		});
+		
+		
+		panelParamsProperties.add(textFieldName);
+		
+		
+		JLabel lblType = new JLabel("Type:");
+		lblType.setBounds(6, 36, 61, 16);
+		panelParamsProperties.add(lblType);
+
+		
+		String[] types = {"integer","float","string"}; // available types
+		
+		comboBoxType = new JComboBox(types);
+		comboBoxType.setBounds(119, 32, 134, 27);
+		comboBoxType.setSelectedIndex(-1); // at first nothing selected
+		
+		comboBoxType.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//System.out.println("comboBoxType action "+e.toString());
+
+				String cmd=e.getActionCommand();
+				if(cmd=="comboBoxChanged") {
+					PDLParameter selParam=(PDLParameter)comboBoxParams.getSelectedItem();
+					if(selParam==null) {
+						// no error message if there are no more params in the combobox
+						if(comboBoxParams.getItemCount()!=0) {
+							JOptionPane.showMessageDialog(frame,"No parameter selected. Cannot change type","Error",JOptionPane.ERROR_MESSAGE);
+						}
+						comboBoxType.setSelectedIndex(-1); // no selection
+					} else {
+						String selType = (String)comboBoxType.getSelectedItem();
+						selParam.setType(selType);
+					}
+				}
+			}
+		});
+		
+		
+		
+		
+		panelParamsProperties.add(comboBoxType);
+		
+		
+		JLabel lblUcd = new JLabel("UCD:");
+		lblUcd.setBounds(6, 64, 61, 16);
+		panelParamsProperties.add(lblUcd);
+		
+
+		textFieldUCD = new JTextField();
+		textFieldUCD.setBounds(119, 58, 134, 28);
+		textFieldUCD.setColumns(10);
+		textFieldUCD.addActionListener(new ActionListener() {
+			
+			// upon change of name, update the parameter in the combobox
+			public void actionPerformed(ActionEvent e) {
+				//System.out.println("textfield action "+e.toString());
+				PDLParameter selParam = (PDLParameter)comboBoxParams.getSelectedItem();
+				if(selParam==null) {
+					JOptionPane.showMessageDialog(frame,"No parameter selected. Cannot change UCD","Error",JOptionPane.ERROR_MESSAGE);
+					textFieldUCD.setText("");
+				} else {
+					selParam.setUCD(e.getActionCommand());
+				}
+			}
+		});
+		
+		panelParamsProperties.add(textFieldUCD);
+		
+		
+
+		
+		JLabel lblUtype = new JLabel("UType:");
+		lblUtype.setBounds(6, 85, 61, 16);
+		panelParamsProperties.add(lblUtype);
+		
+		textFieldUType = new JTextField();
+		textFieldUType.setBounds(119, 79, 134, 28);
+		textFieldUType.setColumns(10);
+		textFieldUType.addActionListener(new ActionListener() {
+			
+			// upon change of name, update the parameter in the combobox
+			public void actionPerformed(ActionEvent e) {
+				PDLParameter selParam = (PDLParameter)comboBoxParams.getSelectedItem();
+				if(selParam==null) {
+					JOptionPane.showMessageDialog(frame,"No parameter selected. Cannot change UType","Error",JOptionPane.ERROR_MESSAGE);
+					textFieldUType.setText("");
+				} else {
+					selParam.setUType(e.getActionCommand());
+				}
+			}
+		});
+		
+		panelParamsProperties.add(textFieldUType);
+		
+		JLabel lblSkoss = new JLabel("SkossConcept:");
+		lblSkoss.setBounds(8, 107, 99, 16);
+		panelParamsProperties.add(lblSkoss);
+		
+		
+		textFieldSkoss = new JTextField();
+		textFieldSkoss.setBounds(119, 102, 134, 28);
+		panelParamsProperties.add(textFieldSkoss);
+		textFieldSkoss.setColumns(10);
+		
+		textFieldSkoss.addActionListener(new ActionListener() {
+			
+			// upon change of name, update the parameter in the combobox
+			public void actionPerformed(ActionEvent e) {
+				PDLParameter selParam = (PDLParameter)comboBoxParams.getSelectedItem();
+				if(selParam==null) {
+					JOptionPane.showMessageDialog(frame,"No parameter selected. Cannot change Skoss concept","Error",JOptionPane.ERROR_MESSAGE);
+					textFieldSkoss.setText("");
+				} else {
+					selParam.setSkoss(e.getActionCommand());
+				}
+			}
+		});
+		
+		
+		
+		JLabel lblUnit = new JLabel("Unit:");
+		lblUnit.setBounds(6, 128, 61, 16);
+		panelParamsProperties.add(lblUnit);
+		
+		textFieldUnit = new JTextField();
+		textFieldUnit.setBounds(119, 122, 134, 28);
+		panelParamsProperties.add(textFieldUnit);
+		textFieldUnit.setColumns(10);
+		
+		textFieldUnit.addActionListener(new ActionListener() {
+			
+			// upon change of name, update the parameter in the combobox
+			public void actionPerformed(ActionEvent e) {
+				PDLParameter selParam = (PDLParameter)comboBoxParams.getSelectedItem();
+				if(selParam==null) {
+					JOptionPane.showMessageDialog(frame,"No parameter selected. Cannot change unit","Error",JOptionPane.ERROR_MESSAGE);
+					textFieldUnit.setText("");
+				} else {
+					selParam.setUnit(e.getActionCommand());
+				}
+			}
+		});
+		
+		
+		JLabel lblPrecision = new JLabel("Precision:");
+		lblPrecision.setBounds(6, 150, 65, 16);
+		panelParamsProperties.add(lblPrecision);
+		
+		textFieldPrecision = new JTextField();
+		textFieldPrecision.setBounds(119, 144, 134, 28);
+		panelParamsProperties.add(textFieldPrecision);
+		textFieldPrecision.setColumns(10);
+		
+		
+		textFieldPrecision.addActionListener(new ActionListener() {
+			
+			// upon change of name, update the parameter in the combobox
+			public void actionPerformed(ActionEvent e) {
+				PDLParameter selParam = (PDLParameter)comboBoxParams.getSelectedItem();
+				if(selParam==null) {
+					JOptionPane.showMessageDialog(frame,"No parameter selected. Cannot change precision","Error",JOptionPane.ERROR_MESSAGE);
+					textFieldPrecision.setText("");
+				} else {
+					selParam.setPrecision(e.getActionCommand());
+				}
+			}
+		});
+		
+		JLabel lblDimension = new JLabel("Dimension:");
+		lblDimension.setBounds(6, 172, 87, 16);
+		panelParamsProperties.add(lblDimension);
+		
+		textFieldDimension = new JTextField();
+		textFieldDimension.setBounds(119, 166, 134, 28);
+		panelParamsProperties.add(textFieldDimension);
+		textFieldDimension.setColumns(10);
+
+		textFieldDimension.addActionListener(new ActionListener() {
+			
+			// upon change of name, update the parameter in the combobox
+			public void actionPerformed(ActionEvent e) {
+				PDLParameter selParam = (PDLParameter)comboBoxParams.getSelectedItem();
+				if(selParam==null) {
+					JOptionPane.showMessageDialog(frame,"No parameter selected. Cannot change dimension","Error",JOptionPane.ERROR_MESSAGE);
+					textFieldDimension.setText("");
+				} else {
+					selParam.setDimension(e.getActionCommand());
+				}
+			}
+		});
+		
+		
+		JLabel lblParametersModule = new JLabel("Parameters Module");
+		lblParametersModule.setBounds(6, 18, 128, 16);
+		frame.getContentPane().add(lblParametersModule);
+		
+		
+		
+		// ---------- Parameter Groups Module ----------
+		
+		
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(448, 46, 366, 209);
+		frame.getContentPane().add(scrollPane);
+
+		PDLGroup rootGroup = new PDLGroup("ROOT");
+		rootNode = new DefaultMutableTreeNode(rootGroup);
+		//rootNode.setAllowsChildren(true); // not necessary
+		
+		
+		treeModelGroups = new DefaultTreeModel(rootNode);
+		treeGroups = new JTree(treeModelGroups);
+		treeGroups.setEditable(false);  // not necessary
+		
+		//treeModelGroups.addTreeModelListener(new MyTreeModelListener()); // to debug the tree changes
+		
+		
+		treeGroups.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION); // allow only one selection in tree
+		treeGroups.setShowsRootHandles(true); // ? 
+		
+		
+		scrollPane.setViewportView(treeGroups);
+		
+		JLabel lblParameterGroupsModule = new JLabel("Parameter Groups Module");
+		lblParameterGroupsModule.setBounds(448, 18, 175, 16);
+		frame.getContentPane().add(lblParameterGroupsModule);
+		
+		JButton btnNewGroup = new JButton("New Group");
+		btnNewGroup.setBounds(821, 46, 117, 29);
+		btnNewGroup.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				if(treeGroups.isSelectionEmpty()==true) {
+					JOptionPane.showMessageDialog(frame,"No parent node selected. Cannot create new group","Error",JOptionPane.ERROR_MESSAGE);
+
+				} else {
+					
+				
+					// get node selected
+					DefaultMutableTreeNode selNode = (DefaultMutableTreeNode) treeGroups.getLastSelectedPathComponent();
+					
+					
+					// create new dialog to enter param for new group
+					GroupDialog newGroup = new GroupDialog(GroupDialog.GroupDialogModeCreate,comboBoxParams,treeGroups,treeModelGroups,selNode);
+					newGroup.setVisible(true);
+				}
+				
+			}
+		});
+		
+		
+		
+		frame.getContentPane().add(btnNewGroup);
+		
+		JButton btnDeleteGroup = new JButton("Delete Group");
+		btnDeleteGroup.setBounds(821, 78, 117, 29);
+		
+		btnDeleteGroup.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			
+				if(treeGroups.isSelectionEmpty()==true) {
+					JOptionPane.showMessageDialog(frame,"No node selected. Cannot delete group","Error",JOptionPane.ERROR_MESSAGE);
+
+				} else {
+					
+					
+					// get the selected node
+					DefaultMutableTreeNode selNode = (DefaultMutableTreeNode) treeGroups.getLastSelectedPathComponent();
+					
+					
+					
+					
+					if(selNode.toString()=="ROOT") {
+						JOptionPane.showMessageDialog(frame,"You cannot delete the ROOT group","Error",JOptionPane.ERROR_MESSAGE);
+					} else {
+					
+						
+						// get the children nodes
+						ArrayList<String> childrenList = new ArrayList<String>();
+						Enumeration children = selNode.children();
+						if(children!=null) {
+							while(children.hasMoreElements()) {
+								childrenList.add(children.nextElement().toString());
+							}
+							System.out.println("DEBUG: PDLEditorApp.initialize: children of selected node = "+childrenList);
+						} else {
+							System.out.println("DEBUG: PDLEditorApp.initialize: selected node has no child");
+						}
+						
+						if(!childrenList.isEmpty()) {
+							
+							JOptionPane.showMessageDialog(frame,"You cannot delete this group because it has the following children:\n"+childrenList,"Error",JOptionPane.ERROR_MESSAGE);
+							
+						} else {
+						
+							
+							int option = JOptionPane.showConfirmDialog(frame,"Are you sure you want to delete group "+selNode.toString()+" ?","Confirmation",JOptionPane.OK_CANCEL_OPTION);
+						    if(option==JOptionPane.OK_OPTION) {
+						    	DefaultMutableTreeNode parentNode =  (DefaultMutableTreeNode)selNode.getParent();
+						    	System.out.println("DEBUG: PDLEditorApp.initialize: Removing node="+selNode.toString()+" parent="+parentNode.toString());
+						    	treeModelGroups.removeNodeFromParent(selNode);
+						    	
+						    	//parentNode.remove(selNode);
+						    	//treeGroups.getModel()
+						    	//treeGroups.repaint();
+						    }
+						}
+					}
+				}
+			
+			}
+		});
+		
+		
+		frame.getContentPane().add(btnDeleteGroup);
+		
+		JButton btnEditGroup = new JButton("Edit Group");
+		btnEditGroup.setBounds(821, 112, 117, 29);
+		btnEditGroup.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				
+				
+				if(treeGroups.isSelectionEmpty()==true) {
+					JOptionPane.showMessageDialog(frame,"No group selected. Cannot edit a group","Error",JOptionPane.ERROR_MESSAGE);
+
+				} else {
+				
+					// get node selected
+					DefaultMutableTreeNode selNode = (DefaultMutableTreeNode) treeGroups.getLastSelectedPathComponent();
+					
+					if(selNode.toString()=="ROOT") {
+						JOptionPane.showMessageDialog(frame,"You cannot edit the ROOT group","Error",JOptionPane.ERROR_MESSAGE);
+					} else {
+					
+						
+						
+						
+						// create new dialog to modify existing group
+						GroupDialog editGroup = new GroupDialog(GroupDialog.GroupDialogModeModify,comboBoxParams,treeGroups,treeModelGroups,selNode);
+						editGroup.setVisible(true);
+					}
+				}
+			}
+			
+		});
+		
+		
+		frame.getContentPane().add(btnEditGroup);
+	}
+}
+
+
+
+	

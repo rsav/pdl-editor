@@ -1,0 +1,8 @@
+v0.2 2013-02-21 
+- added CMZ as author in the about box
+- new button + dialog for creating AtomicConstantExpression
+- new dialog for creating/modifying a parameter
+- using Expression class from net.ivoa.parameter.model
+
+v0.1 2013-02-20 
+- initial revision checked into google code SVN repository
