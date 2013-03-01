@@ -1,16 +1,14 @@
-v0.3 TODO
-- dans Criterion Module (PDLCriterion.java; CriterionDialog.java)
-  - utiliser une map des criterions Map<String,PDLCriterion>
-  - reachedInf and reachedSup a la place de reached
+TODO
+- usage ot TreeMap<String, Statement> for storage of statements
 - dans Group Module ajouter method retournant
   - Map<groupName,parameterName>
   - Map<groupName,PDLParameter>
-  
-  
-  
+ 
 
-
-
+v0.3 2013-03-01 
+- replaced reached by reachedInf and reachedSup in PDLCriterion, CriterionDialog
+- usage of TreeMap<String, Criterion> for storage of criterions
+  
 v0.2 2013-02-21 
 - added CMZ as author in the about box
 - new button + dialog for creating AtomicConstantExpression

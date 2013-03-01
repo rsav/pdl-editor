@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -23,6 +24,7 @@ import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 
 import net.ivoa.pdl.editor.PDLEditorApp;
+import net.ivoa.pdl.editor.guiComponent.MapListModel;
 import net.ivoa.pdl.editor.objectModel.PDLCriterion;
 import net.ivoa.pdl.editor.objectModel.PDLStatement;
 
@@ -33,24 +35,24 @@ public class StatementDialog extends JDialog {
 	private JTextField textFieldName;
 	private DefaultListModel listModelStats;
 	private DefaultTreeModel treeModelGroups;
-	private DefaultListModel listModelCrits;
-	private DefaultListModel listModelCrits1;
-	private DefaultListModel listModelCrits2;
 	private JComboBox comboBoxType;
-	private JList listCrits1;
-	private JList listCrits2;
 	private JComboBox comboBoxGroups;
 	private DefaultComboBoxModel comboBoxModelGroups;
+	private TreeMap<String, PDLCriterion> mapCrits;
+	private DefaultListModel listModelCrits1;
+	private JList listCrits1;
+	private JList listCrits2;
+	private DefaultListModel listModelCrits2;
 
 
 
 	/**
 	 * Create the dialog.
 	 */
-	public StatementDialog(DefaultListModel ls, DefaultListModel lc, DefaultTreeModel tg) {
+	public StatementDialog(DefaultListModel ls, TreeMap<String,PDLCriterion> mc, DefaultTreeModel tg) {
 		
 		listModelStats = ls;
-		listModelCrits = lc;
+		mapCrits = mc;
 		treeModelGroups = tg;
 		
 		
@@ -98,8 +100,8 @@ public class StatementDialog extends JDialog {
 			scrollPaneCrit1.setViewportView(listCrits1);
 			
 			// populate list with list of names of available criterions
-			for(int c=0;c<listModelCrits.getSize();c++) {
-				listModelCrits1.addElement(((PDLCriterion) (listModelCrits.getElementAt(c))).getName());
+			for(String crit: mapCrits.keySet()) {
+				listModelCrits1.addElement(crit);
 			}
 			
 		}
@@ -119,8 +121,8 @@ public class StatementDialog extends JDialog {
 			scrollPaneCrit2.setViewportView(listCrits2);
 
 			// populate list with list of names of available criterions
-			for(int c=0;c<listModelCrits.getSize();c++) {
-				listModelCrits2.addElement(((PDLCriterion) (listModelCrits.getElementAt(c))).getName());
+			for(String crit: mapCrits.keySet()) {
+				listModelCrits2.addElement(crit);
 			}
 					
 		}

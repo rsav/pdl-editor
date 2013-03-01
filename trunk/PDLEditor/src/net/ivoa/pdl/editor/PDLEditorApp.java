@@ -58,6 +58,8 @@ import net.ivoa.pdl.editor.objectModel.PDLService;
 import net.ivoa.pdl.editor.objectModel.PDLStatement;
 import net.ivoa.pdl.editor.wrapperToPDL.ParameterWrapper;
 import net.ivoa.pdl.editor.guiComponent.GroupsTreeModelListener;
+import net.ivoa.pdl.editor.guiComponent.MapListCellRenderer;
+import net.ivoa.pdl.editor.guiComponent.MapListModel;
 
 import org.neodatis.odb.ODB;
 import org.neodatis.odb.ODBFactory;
@@ -90,7 +92,7 @@ public class PDLEditorApp {
 	private DefaultMutableTreeNode rootNode; 
 	private JTextField textFieldExpName;
 
-	private DefaultListModel listModelCrits; // to store the criterions
+	private MapListModel listModelCrits; // to store the criterions
 	private JList listCrits;  // to display the criterions
 	
 	private JTextField textFieldServiceID;
@@ -127,6 +129,7 @@ public class PDLEditorApp {
 	private JTextField textFieldParamPrecision;
 	private JTextField textFieldParamDimension;
 	private JTextField textFieldParamType;
+	private TreeMap<String, PDLCriterion> mapCrits;
 
 
 
@@ -241,7 +244,7 @@ public class PDLEditorApp {
 					
 			
 					
-					System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring expressions: signaling comboBoxModelExps");
+					System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restored expressions: signaling comboBoxModelExps");
 					comboBoxModelExps.actionPerformed(new ActionEvent(btnLoadDescription,0,"update"));
 			    	 
 			    	 // do the selection in the combo box of expressions
@@ -253,12 +256,15 @@ public class PDLEditorApp {
 			    	 
 					
 					System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring criterions");
-					ArrayList<PDLCriterion> criterions = svc.getCriterions();
-					listModelCrits.removeAllElements();
-					for(int nc=0;nc<criterions.size();nc++) {
-						System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: -- restoring criterion "+criterions.get(nc).getName());
-						listModelCrits.addElement(criterions.get(nc));
-					}
+					
+					
+					
+					TreeMap<String, PDLCriterion> criterions = svc.getCriterions();
+					mapCrits.clear();
+					mapCrits.putAll(criterions);
+					
+					System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restored criterions: signaling listModelCrits");
+					listModelCrits.actionPerformed(new ActionEvent(btnLoadDescription,0,"update"));					
 					
 					
 					System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring statements");
@@ -340,7 +346,7 @@ public class PDLEditorApp {
 				svc.setParameters(mapParams);
 				svc.setGroups(treeModelGroups);
 				svc.setExpressions(mapExps);
-				svc.setCriterions(listModelCrits);
+				svc.setCriterions(mapCrits);
 				svc.setStatements(listModelStats);
 				
 				
@@ -435,10 +441,10 @@ public class PDLEditorApp {
 	 * @param en name of the expression to search for
 	 * @return
 	 */
-	public ArrayList<String> getCritsWhereExpIsUsed(DefaultListModel mc, String en) {
+	public ArrayList<String> getCritsWhereExpIsUsed(TreeMap<String, PDLCriterion> mc, String en) {
 	 
 		
-		DefaultListModel listModelCrits = mc;
+		TreeMap<String, PDLCriterion> mapCrits = mc;
 		String theName = en;
 		
 		ArrayList<String> critNamesWhereExpUsed = new ArrayList<String>();
@@ -446,10 +452,12 @@ public class PDLEditorApp {
 		
 		//System.out.println("DEBUG PDLEditorApp.getCritsWhereExpIsUsed: critNamesWhereExpUsed="+critNamesWhereExpUsed);
 		
-		 for(int nc=0;nc<listModelCrits.getSize();nc++) {
-			 PDLCriterion crit = (PDLCriterion) listModelCrits.get(nc);
-			 String critName = crit.getName();
+		 for(String critName: mapCrits.keySet()) {
+			 
 			 System.out.println("DEBUG PDLEditorApp.getCritsWhereExpIsUsed: Exploring criterion="+critName);
+			 
+			 // get the PDL criterion
+			 PDLCriterion crit = mapCrits.get(critName);
 			 
 			// get the "concerning" expression of the criterion
 			 String cexpName = crit.getCExp(); 
@@ -1407,7 +1415,7 @@ public class PDLEditorApp {
 					 
 					 
 						 // check if the expression is used in a criterion
-						 ArrayList<String> critNamesWhereExpUsed = getCritsWhereExpIsUsed(listModelCrits, selExpName);
+						 ArrayList<String> critNamesWhereExpUsed = getCritsWhereExpIsUsed(mapCrits, selExpName);
 						  
 						 if(!critNamesWhereExpUsed.isEmpty()) { // the expression is used in some criterion
 							 JOptionPane.showMessageDialog(appFrame,"Cannot delete expression "+selExpName+" because it's used in the following criterions: \n"+critNamesWhereExpUsed,"Error",JOptionPane.ERROR_MESSAGE);
@@ -1509,25 +1517,37 @@ public class PDLEditorApp {
 		panelCrit.add(scrollPaneCrit);
 
 		
-		listModelCrits = new DefaultListModel();
-
 		
-		// for debug
-		PDLCriterion testCrit1 = new PDLCriterion("TC1");
+		mapCrits=new TreeMap<String,PDLCriterion>();
+		
+		
+		// create dummy criterion for debug
+		PDLCriterion testCrit1 = new PDLCriterion();
 		testCrit1.setCExp("TE1");
 		testCrit1.setType("ValueSmallerThan");
 		testCrit1.addExp("TE2");		
-		listModelCrits.addElement(testCrit1);
+
+		mapCrits.put("TC1",testCrit1);
 		
-		// for debug 
-		PDLCriterion testCrit2 = new PDLCriterion("TC2");
+		// create dummy criterion for debug 
+		PDLCriterion testCrit2 = new PDLCriterion();
 		testCrit2.setCExp("TE2");
 		testCrit2.setType("IsNull");
-		listModelCrits.addElement(testCrit2);
+		
+		mapCrits.put("TC2", testCrit2);
+		
+		
+		listModelCrits = new MapListModel(mapCrits);
 
 		
 		listCrits = new JList(listModelCrits);
 		listCrits.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		
+		MapListCellRenderer listCritsRenderer = new MapListCellRenderer();
+		//renderer.setPreferredSize(new Dimension(200, 130));
+		listCrits.setCellRenderer(listCritsRenderer);
+		
 		scrollPaneCrit.setViewportView(listCrits);
 		
 		JButton btnDeleteCriterion = new JButton("Delete Criterion");
@@ -1540,13 +1560,11 @@ public class PDLEditorApp {
 		btnDeleteCriterion.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
-				// get selected criterion
-				PDLCriterion selCrit = (PDLCriterion) listCrits.getSelectedValue();
+				// get selected criterion name
+				String selCritName = (String) listCrits.getSelectedValue();
 				
-				// get its name
-				String name = selCrit.getName();
 				
-				System.out.println("DEBUG PDLEditorApp.initialize: selected criterion="+selCrit);
+				System.out.println("DEBUG PDLEditorApp.initialize: selected criterion="+selCritName);
 				
 				
 				// check that the criterion is not used by any statement
@@ -1564,7 +1582,7 @@ public class PDLEditorApp {
 					 for(int c=0;c<statCrits.size();c++) {
 						 String critName = statCrits.get(c);
 						 System.out.println("DEBUG PDLEditorApp.initialize: -> found criterium name="+critName);
-						 if(name.equals(critName)) {
+						 if(selCritName.equals(critName)) {
 							 // add the statement to the list to display
 							 statNamesWhereCritUsed.add(statName);
 						 }
@@ -1576,17 +1594,19 @@ public class PDLEditorApp {
 				
 				
 				 if(!statNamesWhereCritUsed.isEmpty()) { // the criterion is used in some statements
-					 JOptionPane.showMessageDialog(appFrame,"Cannot delete criterion "+name+" because it's used in the following statements: \n"+statNamesWhereCritUsed,"Error",JOptionPane.ERROR_MESSAGE);
+					 JOptionPane.showMessageDialog(appFrame,"Cannot delete criterion "+selCritName+" because it's used in the following statements: \n"+statNamesWhereCritUsed,"Error",JOptionPane.ERROR_MESSAGE);
 				 
 				 } else {	 // the expression is not used in any criterion
 				 
 				 
 					
-					int option = JOptionPane.showConfirmDialog(appFrame,"Are you sure you want to delete criterion "+selCrit.getName()+" ?","Confirmation",JOptionPane.OK_CANCEL_OPTION);
+					int option = JOptionPane.showConfirmDialog(appFrame,"Are you sure you want to delete criterion "+selCritName+" ?","Confirmation",JOptionPane.OK_CANCEL_OPTION);
 				    
 					if(option==JOptionPane.OK_OPTION) {
 					
-				    	listModelCrits.removeElement(selCrit);
+						mapCrits.remove(selCritName);
+						listModelCrits.actionPerformed(new ActionEvent(btnDelExpression,0,"update"));
+				    	//listModelCrits.removeElement(selCrit);
 					
 					}
 				 } // else
@@ -1605,7 +1625,7 @@ public class PDLEditorApp {
 				
 					
 				// create new dialog to enter new criterion
-				CriterionDialog newCritDialog = new CriterionDialog(comboBoxModelExps,listModelCrits);
+				CriterionDialog newCritDialog = new CriterionDialog(mapExps,mapCrits,listModelCrits);
 				newCritDialog.setLocationRelativeTo(appFrame); // dialog must appear in the middle of the app frame
 				newCritDialog.setVisible(true);
 				
@@ -1637,8 +1657,8 @@ public class PDLEditorApp {
 		
 		PDLStatement testStat1 = new PDLStatement("TS1");
 		testStat1.setType("IfThen");
-		testStat1.setCrit1("TE1");
-		testStat1.setCrit2("TE2");
+		testStat1.setCrit1("TC1");
+		testStat1.setCrit2("TC2");
 		testStat1.setGroup("TG1");
 		
 		listModelStats.addElement(testStat1);
@@ -1655,7 +1675,7 @@ public class PDLEditorApp {
 				
 					
 				// create new dialog to enter new criterion
-				StatementDialog newStatDialog = new StatementDialog(listModelStats,listModelCrits,treeModelGroups);
+				StatementDialog newStatDialog = new StatementDialog(listModelStats,mapCrits,treeModelGroups);
 				newStatDialog.setLocationRelativeTo(appFrame); // dialog must appear in the middle of the app frame
 				newStatDialog.setVisible(true);
 				

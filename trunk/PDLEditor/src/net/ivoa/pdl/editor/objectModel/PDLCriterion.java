@@ -4,11 +4,7 @@ import java.util.ArrayList;
 
 public class PDLCriterion {
 
-	
-	
 
-
-	String name;
 	String cexp;	// hold the name of the expression concerned by the criterion
 	ArrayList<String> exps; // holds the names of the expressions used
 	String type;    // type of the criterion
@@ -19,16 +15,13 @@ public class PDLCriterion {
 	String connector; // connector with other criterion
 	String criterion; // other criterion
 	
-	public PDLCriterion(String n) {
-		name = n;
+	public PDLCriterion() {
 		exps = new ArrayList<String>();
 		connector = null;
 		criterion = null;
 	}
 
-	public String getName() {
-		return name;
-	}
+
 	
 	public String toString() {
 		
@@ -80,7 +73,7 @@ public class PDLCriterion {
 		
 		
 		
-		res = name+": "+cexp+" "+dtype+" "+dexps;
+		res = cexp+" "+dtype+" "+dexps;
 		
 		if(connector!=null) {
 			res = res + " "+connector+" "+criterion;
