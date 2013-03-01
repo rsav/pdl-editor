@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -22,61 +23,64 @@ import javax.swing.JScrollPane;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 
+import net.ivoa.parameter.model.Expression;
 import net.ivoa.pdl.editor.guiComponent.MapComboBoxModel;
+import net.ivoa.pdl.editor.guiComponent.MapListModel;
 import net.ivoa.pdl.editor.objectModel.PDLCriterion;
 
 
 public class CriterionDialog extends JDialog {
 	
 	private JTextField textFieldName;
-	private AbstractButton okButton;
-	private DefaultListModel listModelCrits;
-	private MapComboBoxModel comboBoxModelExps;
+	private MapListModel listModelCrits;
+	private TreeMap<String, PDLCriterion> mapCrits;
+	private TreeMap<String, Expression> mapExps;
+	private JButton okButton;
+	private JButton cancelButton;
 
 
 
 	/**
 	 * Create the dialog.
-	 * @param me the model of the combo box of the application containing the defined expressions
-	 * @param mc the model of the list of the application containing the defined criterions
+	 * @param me the map containing the expressions
+	 * @param mc the map containing the criterions
+	 * @param lmc the model for the JList displaying the criterions
 	 */
-	public CriterionDialog(MapComboBoxModel me, DefaultListModel mc) {
+	public CriterionDialog(TreeMap<String,Expression> me, TreeMap<String,PDLCriterion> mc, MapListModel lmc) {
 		
-		comboBoxModelExps = me;
-		listModelCrits = mc;
+		mapExps = me;
+		mapCrits = mc;
+		listModelCrits = lmc;
+		
 		
 		
 		final JComboBox comboBoxCond;
-		JButton okButton;
 		
 		setBounds(100, 100, 529, 483);
 		getContentPane().setLayout(null);
-		{
-			JPanel buttonPane = new JPanel();
-			buttonPane.setBounds(17, 406, 497, 39);
-			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
-			getContentPane().add(buttonPane);
-			{
-			    okButton = new JButton("OK");
-				okButton.setActionCommand("OK");
-				buttonPane.add(okButton);
-				getRootPane().setDefaultButton(okButton);
-			}
-			{
-				JButton cancelButton = new JButton("Cancel");
-				cancelButton.setActionCommand("Cancel");
-				buttonPane.add(cancelButton);
-				
-				
-				cancelButton.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						
-						dispose(); // close the window
-					}
-				});
-			}	
-		}
+	
+		JPanel buttonPane = new JPanel();
+		buttonPane.setBounds(17, 406, 497, 39);
+		buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+		getContentPane().add(buttonPane);
+	
+		okButton = new JButton("OK");
+		okButton.setActionCommand("OK");
+		buttonPane.add(okButton);
+		getRootPane().setDefaultButton(okButton);
 		
+		cancelButton = new JButton("Cancel");
+		cancelButton.setActionCommand("Cancel");
+		buttonPane.add(cancelButton);
+				
+				
+		cancelButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				dispose(); // close the window
+			}
+		});
+	
 		
 		
 		
@@ -117,8 +121,8 @@ public class CriterionDialog extends JDialog {
 		scrollPaneExps.setViewportView(listExps);
 		
 		// fill the listExp1 with the names of the available expressions
-		for(int ne=0;ne<comboBoxModelExps.getSize();ne++) {
-			listModelExps.addElement((String) comboBoxModelExps.getElementAt(ne));
+		for(String exp: mapExps.keySet()) {
+			listModelExps.addElement(exp);
 		}
 		
 		
@@ -142,8 +146,8 @@ public class CriterionDialog extends JDialog {
 		
 		
 		// populate comboBoxCrits with avail criterions
-		for(int nc=0;nc<listModelCrits.getSize();nc++) {
-			comboBoxCrits.addItem((String)((PDLCriterion)(listModelCrits.getElementAt(nc))).getName());
+		for(String crit: mapCrits.keySet()) {
+			comboBoxCrits.addItem(crit);
 		}
 		
 		JLabel lblConcerningExpression = new JLabel("Concerning Expression: ");
@@ -164,8 +168,8 @@ public class CriterionDialog extends JDialog {
 		
 		
 		// populate combo box with names of available expressions
-		for(int ne=0;ne<comboBoxModelExps.getSize();ne++) {
-			comboBoxCExp.addItem((String)comboBoxModelExps.getElementAt(ne));
+		for(String exp: mapExps.keySet()) {
+			comboBoxCExp.addItem(exp);
 		}
 		
 
@@ -181,9 +185,7 @@ public class CriterionDialog extends JDialog {
 				
 					// check the name is not used by other criterions
 					boolean nameUsed=false;
-					for(int c=0;c<listModelCrits.getSize();c++) {
-						PDLCriterion crit = (PDLCriterion) listModelCrits.getElementAt(c);
-						String critName =crit.getName();
+					for(String critName: mapCrits.keySet()) {
 						if(critName.equals(newName)) {
 							
 							JOptionPane.showMessageDialog(getContentPane(),"There is already a criterion named "+newName,"Error",JOptionPane.ERROR_MESSAGE);
@@ -257,7 +259,7 @@ public class CriterionDialog extends JDialog {
 						if(rulesOK) {
 
 							System.out.println("DEBUG CriterionDiagog.ctor: Creating new criterion name="+newName);
-							PDLCriterion newCrit = new PDLCriterion(newName);
+							PDLCriterion newCrit = new PDLCriterion();
 							
 							// add the type of the criterion
 							newCrit.setType(newType);
@@ -293,7 +295,15 @@ public class CriterionDialog extends JDialog {
 							}
 							
 							
-							listModelCrits.addElement(newCrit);
+							// put the new criterion in the map under the new name
+							mapCrits.put(newName, newCrit);
+							
+													
+							// signals the model that we have updated the map
+							listModelCrits.actionPerformed(new ActionEvent(okButton,0,"update"));
+					    	 
+
+							
 							
 							dispose(); // close the window
 						}

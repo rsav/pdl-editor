@@ -23,7 +23,7 @@ public class PDLService {
 	TreeMap<String,PDLParameter> parameters;
 	ArrayList<PDLGroupNode> groups;
 	TreeMap<String, Expression> expressions;
-	ArrayList<PDLCriterion> criterions;
+	TreeMap<String, PDLCriterion> criterions;
 	ArrayList<PDLStatement> statements;
 	
 	
@@ -143,7 +143,7 @@ public class PDLService {
 		parameters = new TreeMap<String,PDLParameter>();
 		groups = new ArrayList<PDLGroupNode>();
 		expressions = new TreeMap<String,Expression>();
-		criterions = new ArrayList<PDLCriterion>();
+		criterions = new TreeMap<String,PDLCriterion>();
 		statements= new ArrayList<PDLStatement>();
 
 	
@@ -170,11 +170,8 @@ public class PDLService {
 		
 	}
 
-	public void setCriterions(DefaultListModel m) {
-		for(int nc=0;nc<m.getSize();nc++) {
-			PDLCriterion c = (PDLCriterion) m.getElementAt(nc);
-			criterions.add(c);
-		}
+	public void setCriterions(TreeMap<String,PDLCriterion> c) {
+		criterions = c;
 		
 	}
 
@@ -306,7 +303,7 @@ public class PDLService {
 
 
 
-	public ArrayList<PDLCriterion> getCriterions() {
+	public TreeMap<String,PDLCriterion> getCriterions() {
 		return criterions;
 	}
 

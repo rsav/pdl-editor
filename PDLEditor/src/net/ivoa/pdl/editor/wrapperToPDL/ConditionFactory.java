@@ -49,7 +49,7 @@ public class ConditionFactory {
 		}
 		if (conditionType.equalsIgnoreCase("ValueLargerThan")) {
 			ValueLargerThan temp = new ValueLargerThan();
-			temp.withReached(criterion.isReached());
+			temp.withReached(criterion.isReachedSup());
 			return temp;
 			
 			// TODO rajouter la valeur
