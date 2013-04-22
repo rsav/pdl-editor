@@ -2,26 +2,24 @@ package net.ivoa.pdl.editor.objectModel;
 
 public class PDLStatement {
 
-	String name;
 	String type;  // type: Always or IfThen
 	String crit1; // first criterion	
 	String crit2; // second criterion
 	String group; // the group where the criterion is attached to
 	
-	public PDLStatement(String n) {
-		name = n;
+	public PDLStatement() {
 	}
 	
 	public String toString() {
 
-		String res = name + ":";
+		String res = "";
 		
 		if(type.equals("Always")) {
-			res = res + " Always " + crit1;
+			res = " Always " + crit1;
 		}
 		
 		if(type.equals("IfThen")) {
-			res = res + " If " + crit1 + " Then " +crit2;
+			res = " If " + crit1 + " Then " +crit2;
 		}
 		
 		
@@ -48,10 +46,7 @@ public class PDLStatement {
 	}
 
 		
-	
-	public String getName() {
-		return name;
-	}
+
 	
 	public String getCrit1() {
 		return crit1;

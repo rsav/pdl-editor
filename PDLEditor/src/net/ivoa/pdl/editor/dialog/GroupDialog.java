@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -48,7 +49,8 @@ public class GroupDialog extends JDialog {
 	private DefaultComboBoxModel comboBoxModelServiceOutputs;
 	private MapComboBoxModel comboBoxModelParams;
 
-	private DefaultListModel listModelStats;
+
+	private TreeMap<String, PDLStatement> mapStats;
 
 
 	public final static int GroupDialogModeCreate = 1;
@@ -139,7 +141,7 @@ public class GroupDialog extends JDialog {
 	 * @param mi application comboBox model for the service inputs
 	 * @param mo application comboBox model for the service outputs 
 	 */
-	public GroupDialog(int mode, MapComboBoxModel c, JTree t, DefaultTreeModel m, DefaultMutableTreeNode n, JComboBox ci, JComboBox co, DefaultComboBoxModel mi, DefaultComboBoxModel mo, DefaultListModel ms) {
+	public GroupDialog(int mode, MapComboBoxModel c, JTree t, DefaultTreeModel m, DefaultMutableTreeNode n, JComboBox ci, JComboBox co, DefaultComboBoxModel mi, DefaultComboBoxModel mo, TreeMap<String,PDLStatement> ms) {
 		
 		dialogMode = mode;
 		comboBoxModelParams = c;
@@ -150,10 +152,10 @@ public class GroupDialog extends JDialog {
 		comboBoxServiceOutputs = co;
 		comboBoxModelServiceInputs = mi;
 		comboBoxModelServiceOutputs = mo;
-		listModelStats = ms;
+		mapStats = ms;
 		
 		System.out.println("DEBUG GroupDialog.ctor treeModelGroups="+treeModelGroups);
-		System.out.println("DEBUG GroupDialog.ctor listModelStats="+listModelStats);
+		System.out.println("DEBUG GroupDialog.ctor mapStats="+mapStats);
 
 		
 		setBounds(100, 100, 325, 438);
@@ -422,21 +424,20 @@ public class GroupDialog extends JDialog {
 										comboBoxModelServiceOutputs.setSelectedItem(output);
 										
 										// rename the group in the statements which use that group
-										for(int ns=0;ns<listModelStats.size();ns++) {
-											PDLStatement stat = (PDLStatement) listModelStats.get(ns);
-											String statGroup = stat.getGroup();
-											if(statGroup.equals(oldName)) {
-												System.out.println("DEBUG GroupDialog.ctor: changing group name in statement "+stat.getName());
-												
-												stat.setGroup(theName);
-												//listModelStats.
+										// => remove the statement from the TreeMap and reinsert it with its new name
+										
+										for(String statName: mapStats.keySet()) {
+										
+											if(statName.equals(oldName)) {
+												PDLStatement stat = mapStats.get(statName);
+												mapStats.remove(statName);
+												mapStats.put(theName, stat);
 											}
-											
 										}
 										
 										
 										
-									}
+									} // if the name has changed
 									
 									
 									// Make sure the user can see the new node.

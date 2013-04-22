@@ -1,9 +1,12 @@
 TODO
-- usage ot TreeMap<String, Statement> for storage of statements
+- usage ot TreeMap<String, PDLStatement> for storage of statements
 - dans Group Module ajouter method retournant
   - Map<groupName,parameterName>
   - Map<groupName,PDLParameter>
  
+
+v0.4 2013-04-22 
+- usage of TreeMap<String, PDLStatement> for storage of statements
 
 v0.3 2013-03-01 
 - replaced reached by reachedInf and reachedSup in PDLCriterion, CriterionDialog

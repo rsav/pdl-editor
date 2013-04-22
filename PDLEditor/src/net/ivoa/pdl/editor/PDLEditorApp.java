@@ -67,7 +67,7 @@ import org.neodatis.odb.Objects;
 
 public class PDLEditorApp {
 
-	static String appVersion = "0.2";
+	static String appVersion = "0.4";
 	static String appName = "PDL Editor";
 	static String[] appAuthors={"Renaud Savalle (Paris Observatory)","Carlo Maria Zwolf (Paris Observatory)"};
 	
@@ -108,7 +108,7 @@ public class PDLEditorApp {
 
 
 
-	private DefaultListModel listModelStats; // to store the statements
+	private MapListModel listModelStats; // to store the statements
 	private JList listStats; // to display the statements
 
 
@@ -119,7 +119,7 @@ public class PDLEditorApp {
 
 	private TreeMap<String, PDLParameter> mapParams; // treemap to store the parameters
 
-
+	private TreeMap<String, PDLStatement> mapStats; // treemap to store the statements
 
 	private GroupsTreeModelListener treeModelGroupsListener;
 	private JTextField textFieldExpType;
@@ -268,15 +268,11 @@ public class PDLEditorApp {
 					
 					
 					System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring statements");
-					ArrayList<PDLStatement> statements = svc.getStatements();
-					listModelStats.removeAllElements();
-					for(int ns=0;ns<statements.size();ns++) {
-						System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: -- restoring statement "+statements.get(ns).getName());
-						listModelStats.addElement(statements.get(ns));
-					}
 					
-					
-					
+					TreeMap<String,PDLStatement> stats = svc.getStatements();
+					mapStats.clear();
+					mapStats.putAll(stats);
+						
 					
 					System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: restoration done.");
 				}
@@ -347,7 +343,7 @@ public class PDLEditorApp {
 				svc.setGroups(treeModelGroups);
 				svc.setExpressions(mapExps);
 				svc.setCriterions(mapCrits);
-				svc.setStatements(listModelStats);
+				svc.setStatements(mapStats);
 				
 				
 				odb.store(svc);
@@ -1119,7 +1115,7 @@ public class PDLEditorApp {
 														   ,comboBoxServiceOutputs
 														   ,comboBoxModelServiceInputs
 														   ,comboBoxModelServiceOutputs
-														   ,listModelStats
+														   ,mapStats
 														   );
 					newGroupDialog.setLocationRelativeTo(appFrame); // dialog must appear in the middle of the app frame
 					newGroupDialog.setVisible(true);
@@ -1184,12 +1180,15 @@ public class PDLEditorApp {
 							
 							// check that the group is not used by any statement
 							ArrayList<String> statsWhereGroupIsUsed = new ArrayList<String>();
-							for(int s=0;s<listModelStats.getSize();s++) {
-								PDLStatement stat = (PDLStatement) listModelStats.get(s);
-								System.out.println("DEBUG PDLEditor.initialize: Exploring statement name="+stat.getName());
+							
+							for(String statName: mapStats.keySet()) {
+								
+								System.out.println("DEBUG PDLEditor.initialize: Exploring statement name="+statName);
+
+								PDLStatement stat = (PDLStatement) mapStats.get(statName);
 								String statGroup = stat.getGroup();
 								if(statGroup.equals(selNode.toString())) { // group for current statement is the same as the group to be deleted
-									statsWhereGroupIsUsed.add(stat.getName());
+									statsWhereGroupIsUsed.add(statName);
 								}
 							}
 							
@@ -1269,7 +1268,7 @@ public class PDLEditorApp {
 																,comboBoxServiceOutputs
 																,comboBoxModelServiceInputs
 																,comboBoxModelServiceOutputs
-																,listModelStats
+																,mapStats
 																);
 						editGroupDialog.setLocationRelativeTo(appFrame); // dialog must appear in the middle of the app frame
 						editGroupDialog.setVisible(true);
@@ -1569,10 +1568,13 @@ public class PDLEditorApp {
 				
 				// check that the criterion is not used by any statement
 				
-				 ArrayList<String> statNamesWhereCritUsed = new ArrayList<String>();				 
-				 for(int s=0;s<listModelStats.getSize();s++) { // explore all statements
-					 PDLStatement stat = (PDLStatement) listModelStats.get(s);
-					 String statName = stat.getName();
+				 ArrayList<String> statNamesWhereCritUsed = new ArrayList<String>();	
+				 
+				 
+				 for(String statName : mapStats.keySet()) {
+					 
+				 
+					 PDLStatement stat = (PDLStatement) mapStats.get(statName);
 					 System.out.println("DEBUG PDLEditorApp.initialize: Exploring statement="+statName);
 					 ArrayList<String> statCrits = new ArrayList<String>();
 					 
@@ -1651,18 +1653,26 @@ public class PDLEditorApp {
 		scrollPaneStats.setBounds(6, 6, 294, 168);
 		panelStats.add(scrollPaneStats);
 		
-		listModelStats = new DefaultListModel();
-		listStats = new JList(listModelStats);
-		scrollPaneStats.setViewportView(listStats);
 		
-		PDLStatement testStat1 = new PDLStatement("TS1");
+		mapStats = new TreeMap<String,PDLStatement>();
+		
+		
+		
+		PDLStatement testStat1 = new PDLStatement();
 		testStat1.setType("IfThen");
 		testStat1.setCrit1("TC1");
 		testStat1.setCrit2("TC2");
 		testStat1.setGroup("TG1");
 		
-		listModelStats.addElement(testStat1);
+		mapStats.put("TS1", testStat1);
 		
+		listModelStats = new MapListModel(mapStats);
+		listStats = new JList(listModelStats);
+		scrollPaneStats.setViewportView(listStats);
+		
+		MapListCellRenderer listStatsRenderer = new MapListCellRenderer();
+		//renderer.setPreferredSize(new Dimension(200, 130));
+		listStats.setCellRenderer(listStatsRenderer);
 		
 		
 		JButton btnNewStatement = new JButton("New Statement");
@@ -1675,7 +1685,7 @@ public class PDLEditorApp {
 				
 					
 				// create new dialog to enter new criterion
-				StatementDialog newStatDialog = new StatementDialog(listModelStats,mapCrits,treeModelGroups);
+				StatementDialog newStatDialog = new StatementDialog(mapStats,listModelStats,mapCrits,treeModelGroups);
 				newStatDialog.setLocationRelativeTo(appFrame); // dialog must appear in the middle of the app frame
 				newStatDialog.setVisible(true);
 				
@@ -1685,7 +1695,7 @@ public class PDLEditorApp {
 		
 		
 		
-		JButton btnDeleteStatement = new JButton("Delete Statement");
+		final JButton btnDeleteStatement = new JButton("Delete Statement");
 		btnDeleteStatement.setBounds(312, 35, 144, 29);
 		panelStats.add(btnDeleteStatement);
 		
@@ -1693,14 +1703,15 @@ public class PDLEditorApp {
 			public void actionPerformed(ActionEvent e) {
 				
 				// get selected statement
-				PDLStatement selStat = (PDLStatement) listStats.getSelectedValue();
-			
+				String selStatName = (String) listStats.getSelectedValue();
 				
-				int option = JOptionPane.showConfirmDialog(appFrame,"Are you sure you want to delete statement "+selStat.getName()+" ?","Confirmation",JOptionPane.OK_CANCEL_OPTION);
+				int option = JOptionPane.showConfirmDialog(appFrame,"Are you sure you want to delete statement "+selStatName+" ?","Confirmation",JOptionPane.OK_CANCEL_OPTION);
 			    
 				if(option==JOptionPane.OK_OPTION) {
 				
-			    	listModelStats.removeElement(selStat);
+					mapStats.remove(selStatName);
+					listModelStats.actionPerformed(new ActionEvent(btnDeleteStatement,0,"update"));
+					
 				
 			    }
 				
