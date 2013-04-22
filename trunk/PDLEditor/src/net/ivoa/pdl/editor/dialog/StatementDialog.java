@@ -33,7 +33,7 @@ public class StatementDialog extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
 	private JTextField textFieldName;
-	private DefaultListModel listModelStats;
+	private MapListModel listModelStats;
 	private DefaultTreeModel treeModelGroups;
 	private JComboBox comboBoxType;
 	private JComboBox comboBoxGroups;
@@ -42,6 +42,7 @@ public class StatementDialog extends JDialog {
 	private DefaultListModel listModelCrits1;
 	private JList listCrits1;
 	private JList listCrits2;
+	private TreeMap<String, PDLStatement> mapStats;
 	private DefaultListModel listModelCrits2;
 
 
@@ -49,8 +50,9 @@ public class StatementDialog extends JDialog {
 	/**
 	 * Create the dialog.
 	 */
-	public StatementDialog(DefaultListModel ls, TreeMap<String,PDLCriterion> mc, DefaultTreeModel tg) {
+	public StatementDialog(TreeMap<String,PDLStatement> ms, MapListModel ls, TreeMap<String,PDLCriterion> mc, DefaultTreeModel tg) {
 		
+		mapStats = ms;
 		listModelStats = ls;
 		mapCrits = mc;
 		treeModelGroups = tg;
@@ -167,7 +169,7 @@ public class StatementDialog extends JDialog {
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
 			{
-				JButton okButton = new JButton("OK");
+				final JButton okButton = new JButton("OK");
 				okButton.setActionCommand("OK");
 				buttonPane.add(okButton);
 				getRootPane().setDefaultButton(okButton);
@@ -186,9 +188,9 @@ public class StatementDialog extends JDialog {
 						
 							// check the name is not used by other statements
 							boolean nameUsed=false;
-							for(int c=0;c<listModelStats.getSize();c++) {
-								PDLStatement stat = (PDLStatement) listModelStats.getElementAt(c);
-								String statName =stat.getName();
+							
+							for(String statName: mapStats.keySet()) {
+							
 								if(statName.equals(newName)) {
 									
 									JOptionPane.showMessageDialog(getContentPane(),"There is already a statement named "+newName,"Error",JOptionPane.ERROR_MESSAGE);
@@ -254,14 +256,17 @@ public class StatementDialog extends JDialog {
 										// create the new statement
 										System.out.println("DEBUG StatementDiagog.ctor: creating new statement name="+newName);
 	
-										PDLStatement newStat = new PDLStatement(newName);
+										PDLStatement newStat = new PDLStatement();
 										newStat.setType(newType);
 										newStat.setCrit1(selCrit1);
 										newStat.setCrit2(selCrit2);
 										newStat.setGroup(selGroup);
 										
-										listModelStats.addElement(newStat);
+										mapStats.put(newName, newStat);
 	
+										// signals the model that we have updated the map
+										listModelStats.actionPerformed(new ActionEvent(okButton,0,"update"));
+										
 										dispose(); // close the window
 									}
 								} // else
