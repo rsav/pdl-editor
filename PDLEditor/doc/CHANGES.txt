@@ -1,9 +1,13 @@
 TODO
-- usage ot TreeMap<String, PDLStatement> for storage of statements
-- dans Group Module ajouter method retournant
-  - Map<groupName,parameterName>
-  - Map<groupName,PDLParameter>
+- dans Group Module ajouter methodes retournant
+  - Map<groupName,parameterName> : names of parameters used by a group
+  - Map<groupName,PDLParameter> : parameters used by a group
  
+
+v0.5 2013-04-23 
+- added dialog for creating a AtomicParameter Expression
+- added dialog for creating a ParenthesisContent Expression
+- added dialog for creating a Function
 
 v0.4 2013-04-22 
 - usage of TreeMap<String, PDLStatement> for storage of statements

@@ -42,13 +42,19 @@ import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
 
 import net.ivoa.parameter.model.AtomicConstantExpression;
+import net.ivoa.parameter.model.AtomicParameterExpression;
 import net.ivoa.parameter.model.Expression;
+import net.ivoa.parameter.model.ParameterReference;
 import net.ivoa.parameter.model.ParameterType;
+import net.ivoa.parameter.model.ParenthesisContent;
 import net.ivoa.pdl.editor.dialog.AboutDialog;
 import net.ivoa.pdl.editor.dialog.AtomicConstantExpressionDialog;
+import net.ivoa.pdl.editor.dialog.AtomicParameterExpressionDialog;
 import net.ivoa.pdl.editor.dialog.CriterionDialog;
+import net.ivoa.pdl.editor.dialog.FunctionExpressionDialog;
 import net.ivoa.pdl.editor.dialog.GroupDialog;
 import net.ivoa.pdl.editor.dialog.ParameterDialog;
+import net.ivoa.pdl.editor.dialog.ParenthesisContentExpressionDialog;
 import net.ivoa.pdl.editor.dialog.StatementDialog;
 import net.ivoa.pdl.editor.guiComponent.MapComboBoxModel;
 import net.ivoa.pdl.editor.objectModel.PDLCriterion;
@@ -67,7 +73,7 @@ import org.neodatis.odb.Objects;
 
 public class PDLEditorApp {
 
-	static String appVersion = "0.4";
+	static String appVersion = "0.5";
 	static String appName = "PDL Editor";
 	static String[] appAuthors={"Renaud Savalle (Paris Observatory)","Carlo Maria Zwolf (Paris Observatory)"};
 	
@@ -488,7 +494,7 @@ public class PDLEditorApp {
 	/**
 	 * get the groups where a parameter is used (recursive call)
 	 * @param root root of the tree to search
-	 * @param param parameter to search
+	 * @param param name of parameter to search
 	 * @param list list of group where the param is used, to be initialized by caller
 	 * @return list of groups where the param is used
 	 */
@@ -1352,6 +1358,24 @@ public class PDLEditorApp {
 							ParameterType selExpType = selExp1.getConstantType();
 							textFieldExpType.setText(selExpType.toString());
 						}
+						if(selExpClass == AtomicParameterExpression.class) {
+							textFieldExpClass.setText("APE");
+							AtomicParameterExpression selExp1=(AtomicParameterExpression)selExp; 
+							ParameterReference selExpParameterRef = selExp1.getParameterRef(); // get the parameter reference
+							String selExpParameterName = selExpParameterRef.getParameterName(); // get the parameter name from the parameter reference
+							PDLParameter selExpParameter = mapParams.get(selExpParameterName); // get the PDLParameter from the parameter name
+							ParameterType selExpParameterType = selExpParameter.getType(); // get the PDLParameter type
+							textFieldExpType.setText(selExpParameterType.toString());
+						}
+						if(selExpClass == ParenthesisContent.class) {
+							textFieldExpClass.setText("PCE");
+							ParenthesisContent selExp1 = (ParenthesisContent)selExp;
+							//Expression selExp2 = selExp1.getExpression(); // get the expression in the ParenthesisContent Expression
+							
+							// TODO: I don't know how to get the type of a ParenthesisContent Expression
+							textFieldExpType.setText("unknown");
+							
+						}
 						
 					} else {
 						textFieldExpName.setText("");
@@ -1384,14 +1408,45 @@ public class PDLEditorApp {
 		JButton btnNewAtomicParameterExpression = new JButton("New Atomic Parameter Expression");
 		btnNewAtomicParameterExpression.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				
+				AtomicParameterExpressionDialog newAtomicParameterExpressionDialog = new AtomicParameterExpressionDialog(mapExps, comboBoxModelExps, comboBoxExps, mapParams);
+				
+				newAtomicParameterExpressionDialog.setLocationRelativeTo(appFrame); // dialog must appear in the middle of the app frame
+				newAtomicParameterExpressionDialog.setVisible(true);
+				
 			}
 		});
 		panelExpsMenu.add(btnNewAtomicParameterExpression);
 		
 		JButton btnNewParenthesisExpression = new JButton("New Parenthesis Expression");
+		btnNewParenthesisExpression.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				ParenthesisContentExpressionDialog newParenthesisContentExpressionDialog = new ParenthesisContentExpressionDialog(mapExps, comboBoxModelExps, comboBoxExps, mapParams);
+				
+				newParenthesisContentExpressionDialog.setLocationRelativeTo(appFrame); // dialog must appear in the middle of the app frame
+				newParenthesisContentExpressionDialog.setVisible(true);
+				
+			}
+		});
+		
+		
+		
 		panelExpsMenu.add(btnNewParenthesisExpression);
 		
 		JButton btnNewFunctionExpression = new JButton("New Function Expression");
+		
+		btnNewFunctionExpression.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				FunctionExpressionDialog newFunctionExpressionDialog = new FunctionExpressionDialog(mapExps, comboBoxModelExps, comboBoxExps, mapParams);
+				
+				newFunctionExpressionDialog.setLocationRelativeTo(appFrame); // dialog must appear in the middle of the app frame
+				newFunctionExpressionDialog.setVisible(true);
+				
+			}
+		});
+		
 		panelExpsMenu.add(btnNewFunctionExpression);
 		
 		
