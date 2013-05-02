@@ -37,7 +37,9 @@ public class ConditionFactory {
 		}
 		if (conditionType.equalsIgnoreCase("BelongToSet")) {
 			BelongToSet temp = new BelongToSet();
-			temp.withValue(ConditionFactory.getInstance().getExpressionListFromNames(criterion.getExps(), expressionMap));
+			temp.withValue(ConditionFactory.getInstance()
+					.getExpressionListFromNames(criterion.getExps(),
+							expressionMap));
 			return temp;
 		}
 		if (conditionType.equalsIgnoreCase("IsRational")) {
@@ -49,21 +51,43 @@ public class ConditionFactory {
 		if (conditionType.equalsIgnoreCase("ValueLargerThan")) {
 			ValueLargerThan temp = new ValueLargerThan();
 			temp.withReached(criterion.isReachedSup());
+			String expressionName = criterion.getExps().get(0);
+			temp.setValue(expressionMap.get(expressionName));
 			return temp;
-			
-			// TODO rajouter la valeur
 		}
 		if (conditionType.equalsIgnoreCase("ValueSmallerThan")) {
-			return new ValueSmallerThan();
-			// TODO rajouter la valeur
+			ValueSmallerThan temp = new ValueSmallerThan();
+			temp.withReached(criterion.isReachedInf());
+			String expressionName = criterion.getExps().get(0);
+			temp.setValue(expressionMap.get(expressionName));
+			return temp;
 		}
 		if (conditionType.equalsIgnoreCase("ValueInRange")) {
-			return new ValueInRange();
-			// TODO rajouter les deux valeurs
+
+			ValueSmallerThan supLimit = new ValueSmallerThan();
+			supLimit.withReached(criterion.isReachedInf());
+			// Following line get argument 1 because sup is stored in the second
+			// argument of the list
+			String supExpressionName = criterion.getExps().get(1);
+			supLimit.setValue(expressionMap.get(supExpressionName));
+
+			ValueLargerThan infLimit = new ValueLargerThan();
+			supLimit.withReached(criterion.isReachedSup());
+			// Following line get argument 0 because sup is stored in the first
+			// argument of the list
+			String infExpressionName = criterion.getExps().get(0);
+			supLimit.setValue(expressionMap.get(infExpressionName));
+
+			ValueInRange vir = new ValueInRange().withSup(supLimit).withInf(
+					infLimit);
+			return vir;
 		}
 		if (conditionType.equalsIgnoreCase("DefaultValue")) {
-			return new DefaultValue();
-			// TODO rajouter la valeur
+			
+			DefaultValue defaultValue = new DefaultValue();
+			String expressionName = criterion.getExps().get(0);
+			defaultValue.withValue(expressionMap.get(expressionName));
+			return defaultValue;
 		}
 		return null;
 	}
