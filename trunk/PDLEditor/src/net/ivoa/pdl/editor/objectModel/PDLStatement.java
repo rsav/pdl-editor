@@ -2,6 +2,10 @@ package net.ivoa.pdl.editor.objectModel;
 
 public class PDLStatement {
 
+	public String getType() {
+		return type;
+	}
+
 	String type;  // type: Always or IfThen
 	String crit1; // first criterion	
 	String crit2; // second criterion
