@@ -44,6 +44,7 @@ public class StatementDialog extends JDialog {
 	private JList listCrits2;
 	private TreeMap<String, PDLStatement> mapStats;
 	private DefaultListModel listModelCrits2;
+	private JTextField textFieldComment;
 
 
 
@@ -59,7 +60,7 @@ public class StatementDialog extends JDialog {
 		
 		
 		
-		setBounds(100, 100, 603, 301);
+		setBounds(100, 100, 603, 349);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -137,6 +138,15 @@ public class StatementDialog extends JDialog {
 	    comboBoxGroups = new JComboBox(comboBoxModelGroups);
 		comboBoxGroups.setBounds(366, 2, 198, 27);
 		contentPanel.add(comboBoxGroups);
+		
+		JLabel lblComment = new JLabel("Comment:");
+		lblComment.setBounds(6, 234, 72, 16);
+		contentPanel.add(lblComment);
+		
+		textFieldComment = new JTextField();
+		textFieldComment.setBounds(81, 228, 483, 28);
+		contentPanel.add(textFieldComment);
+		textFieldComment.setColumns(10);
 		
 		// populate list of groups with all the avail groups
 		ArrayList<String> listGroups = new ArrayList<String>();
@@ -256,11 +266,15 @@ public class StatementDialog extends JDialog {
 										// create the new statement
 										System.out.println("DEBUG StatementDiagog.ctor: creating new statement name="+newName);
 	
+										// get the comment
+										String newComment = textFieldComment.getText();
+										
 										PDLStatement newStat = new PDLStatement();
 										newStat.setType(newType);
 										newStat.setCrit1(selCrit1);
 										newStat.setCrit2(selCrit2);
 										newStat.setGroup(selGroup);
+										newStat.setComment(newComment);
 										
 										mapStats.put(newName, newStat);
 	
