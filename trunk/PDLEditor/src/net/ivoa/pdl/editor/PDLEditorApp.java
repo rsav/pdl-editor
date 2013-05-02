@@ -44,6 +44,7 @@ import javax.swing.tree.TreeSelectionModel;
 import net.ivoa.parameter.model.AtomicConstantExpression;
 import net.ivoa.parameter.model.AtomicParameterExpression;
 import net.ivoa.parameter.model.Expression;
+import net.ivoa.parameter.model.FunctionExpression;
 import net.ivoa.parameter.model.ParameterReference;
 import net.ivoa.parameter.model.ParameterType;
 import net.ivoa.parameter.model.ParenthesisContent;
@@ -776,7 +777,7 @@ public class PDLEditorApp {
 				if(cmd.equals("comboBoxChanged")) {
 					String selParamName=(String)comboBoxParams.getSelectedItem();
 					
-					System.out.println("PDLEditorApp.ctor: selParamName="+selParamName);
+					System.out.println("DEBUG: PDLEditorApp.ctor: selParamName="+selParamName);
 					
 					if(selParamName!=null) {
 						
@@ -1373,6 +1374,14 @@ public class PDLEditorApp {
 							//Expression selExp2 = selExp1.getExpression(); // get the expression in the ParenthesisContent Expression
 							
 							// TODO: I don't know how to get the type of a ParenthesisContent Expression
+							textFieldExpType.setText("unknown");
+						}
+						if(selExpClass == FunctionExpression.class) {
+							textFieldExpClass.setText("FE");
+							FunctionExpression selExp1 = (FunctionExpression)selExp;
+							//Expression selExp2 = selExp1.getExpression(); // get the expression in the ParenthesisContent Expression
+							
+							// TODO: I don't know how to get the type of a FunctionExpression Expression
 							textFieldExpType.setText("unknown");
 							
 						}
