@@ -9,7 +9,10 @@ public class PDLGroup {
 	
 	private ArrayList<String> params; // list to hold the param names
 	
-	
+	public List<PDLGroup> getChildren(){
+		//TODO
+//		return null;
+	}
 	
 	public PDLGroup(String n) {
 		System.out.println("DEBUG PDLGroup.ctor: Creating new PDLGroup "+n);
@@ -65,6 +68,8 @@ public class PDLGroup {
 		name = n;
 		
 	}
+	
+	
 
 	
 

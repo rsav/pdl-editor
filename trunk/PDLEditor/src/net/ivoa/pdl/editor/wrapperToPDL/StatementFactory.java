@@ -37,7 +37,8 @@ public class StatementFactory {
 					.wrappingToPDL(criterionMap.get(criterionName),
 							criterionMap, expressionMap);
 
-			stat.withAlways(new Always().withCriterion(containedCriterion));
+			stat.withAlways(new Always().withCriterion(containedCriterion))
+					.withComment(statement.getComment());
 
 			return stat;
 		}
@@ -55,8 +56,9 @@ public class StatementFactory {
 							criterionMap, expressionMap);
 
 			IfThenConditionalStatement itcs = new IfThenConditionalStatement()
-					.withIf(new If().withCriterion(ifCriterion)).withThen(
-							new Then().withCriterion(thenCriterion));
+					.withIf(new If().withCriterion(ifCriterion))
+					.withThen(new Then().withCriterion(thenCriterion))
+					.withComment(statement.getComment());
 
 			return itcs;
 		}
