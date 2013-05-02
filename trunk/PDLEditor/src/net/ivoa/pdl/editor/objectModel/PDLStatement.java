@@ -2,15 +2,29 @@ package net.ivoa.pdl.editor.objectModel;
 
 public class PDLStatement {
 
-	public String getType() {
-		return type;
-	}
+
 
 	String type;  // type: Always or IfThen
 	String crit1; // first criterion	
 	String crit2; // second criterion
 	String group; // the group where the criterion is attached to
+	String comment; // comment
 	
+	
+	public String getType() {
+		return type;
+	}
+	
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+
+
+
 	public PDLStatement() {
 	}
 	

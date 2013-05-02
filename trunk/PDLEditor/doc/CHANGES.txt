@@ -1,4 +1,8 @@
 TODO
+- dans module Expression, rajouter la valeur de l'expression
+
+- dans module statement et PDLStatement rajouter commentaire (String)
+
 - dans Group Module ajouter methodes retournant
   - Map<groupName,parameterName> : names of parameters used by a group
   - Map<groupName,PDLParameter> : parameters used by a group
