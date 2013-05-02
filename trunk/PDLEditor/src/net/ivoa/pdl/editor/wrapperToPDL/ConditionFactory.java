@@ -1,9 +1,8 @@
 package net.ivoa.pdl.editor.wrapperToPDL;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import net.ivoa.parameter.model.AbstractCondition;
 import net.ivoa.parameter.model.BelongToSet;
