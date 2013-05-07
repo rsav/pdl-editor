@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.tree.DefaultTreeModel;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -35,14 +36,15 @@ public class ServiceWrapper {
 			PDLGroup outputs, Map<String, PDLStatement> mapStats,
 			Map<String, PDLParameter> mapParams,
 			Map<String, Expression> mapExpressions,
-			Map<String, PDLCriterion> mapCrits) {
+			Map<String, PDLCriterion> mapCrits,
+			DefaultTreeModel treeModelGroups) {
 
 		Service toReturn = new Service();
 		toReturn.withDescription(service.getDescription());
 		toReturn.withInputs(GroupWrapper.getInstance().wrapToPDL(inputs,
-				mapStats, mapParams, mapExpressions, mapCrits));
+				mapStats, mapParams, mapExpressions, mapCrits, treeModelGroups));
 		toReturn.withOutputs(GroupWrapper.getInstance().wrapToPDL(outputs,
-				mapStats, mapParams, mapExpressions, mapCrits));
+				mapStats, mapParams, mapExpressions, mapCrits, treeModelGroups));
 		toReturn.withServiceId(service.getID());
 		toReturn.withServiceName(service.getName());
 
@@ -68,12 +70,14 @@ public class ServiceWrapper {
 			PDLGroup outputs, Map<String, PDLStatement> mapStats,
 			Map<String, PDLParameter> mapParams,
 			Map<String, Expression> mapExpressions,
-			Map<String, PDLCriterion> mapCrits, String outputXMLFileName)
+			Map<String, PDLCriterion> mapCrits,
+			DefaultTreeModel treeModelGroups,
+			String outputXMLFileName)
 			throws JAXBException, PropertyException, FileNotFoundException {
 
 		Service wrappedPDLservice = ServiceWrapper.getInstance().WrapToPDL(
 				service, inputs, outputs, mapStats, mapParams, mapExpressions,
-				mapCrits);
+				mapCrits, treeModelGroups);
 
 		JAXBContext jaxbContext = JAXBContext
 				.newInstance("net.ivoa.parameter.model");

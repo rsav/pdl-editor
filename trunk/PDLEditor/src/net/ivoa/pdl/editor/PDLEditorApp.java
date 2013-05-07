@@ -12,6 +12,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -66,6 +67,7 @@ import net.ivoa.pdl.editor.objectModel.PDLService;
 import net.ivoa.pdl.editor.objectModel.PDLStatement;
 import net.ivoa.pdl.editor.utilities.Utilities;
 import net.ivoa.pdl.editor.wrapperToPDL.ParameterWrapper;
+import net.ivoa.pdl.editor.wrapperToPDL.ServiceWrapper;
 import net.ivoa.pdl.editor.guiComponent.GroupsTreeModelListener;
 import net.ivoa.pdl.editor.guiComponent.MapListCellRenderer;
 import net.ivoa.pdl.editor.guiComponent.MapListModel;
@@ -76,7 +78,7 @@ import org.neodatis.odb.Objects;
 
 public class PDLEditorApp {
 
-	static String appVersion = "0.5";
+	static String appVersion = "0.6";
 	static String appName = "PDL Editor";
 	static String[] appAuthors = { "Renaud Savalle (Paris Observatory)",
 			"Carlo Maria Zwolf (Paris Observatory)" };
@@ -170,6 +172,113 @@ public class PDLEditorApp {
 		});
 	}
 
+	
+	/**
+	 * export the description into a XML PDL file
+	 */
+	
+	protected void exportToXML() {
+		
+		
+		try {
+
+			
+		
+				
+				// get the PDL group name for inputs and output
+				String inputsGroupName = (String) comboBoxModelServiceInputs.getSelectedItem();
+				String outputsGroupName = (String) comboBoxModelServiceOutputs.getSelectedItem();
+				
+				// Create the object svc
+				PDLService svc = new PDLService(textFieldServiceID.getText());
+				svc.setName(textFieldServiceName.getText());
+				svc.setDescription(textAreaServiceDesc.getText());
+				svc.setInputsGroup(inputsGroupName);
+				svc.setOutputsGroup(outputsGroupName);
+				svc.setParameters(mapParams);
+				svc.setGroups(treeModelGroups);
+				svc.setExpressions(mapExps);
+				svc.setCriterions(mapCrits);
+				svc.setStatements(mapStats);
+				
+				// get PDL group corresponding to inputsGroupName 
+				PDLGroup inputsGroup;
+				
+				if(inputsGroupName==null) {
+					JOptionPane.showMessageDialog(appFrame,"No group selected for inputs. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
+					return;
+				} else {
+					inputsGroup = getGroupByName((DefaultMutableTreeNode) treeModelGroups.getRoot(),inputsGroupName);
+					System.out.println("DEBUG PDLEditorApp.exportToXML: found input group="+inputsGroup);
+				}
+				
+				// get PDL group corresponding to inputsGroupName 
+				PDLGroup outputsGroup;
+				
+				if(outputsGroupName==null) {
+					JOptionPane.showMessageDialog(appFrame,"No group selected for outputs. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
+					return;
+				} else {
+					outputsGroup = getGroupByName((DefaultMutableTreeNode) treeModelGroups.getRoot(),outputsGroupName);
+					System.out.println("DEBUG PDLEditorApp.exportToXML: found input group="+outputsGroup);
+				}
+				
+				
+				
+				
+				
+				
+				JFileChooser chooser = new JFileChooser("/tmp");
+				FileNameExtensionFilter filter = new FileNameExtensionFilter(
+						"PDL XML files", "xml"); 
+				chooser.setFileFilter(filter);
+				int returnVal = chooser.showSaveDialog(appFrame);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+
+					String fileName = chooser.getSelectedFile().getPath();
+
+					System.out
+							.println("DEBUG PDLEditorApp.exportToXML: Opening file "
+									+ fileName);
+
+					File file = new File(fileName);
+					if (file.exists()) {
+						if (!file.delete()) {
+							System.err.println("ERROR deleting file " + fileName);
+						} else {
+							System.out
+									.println("DEBUG PDLEditorApp.exportToXML: file "
+											+ fileName + " deleted OK");
+						}
+
+					}
+				
+				
+				ServiceWrapper.getInstance().serializeToXML(svc
+						,inputsGroup
+						,outputsGroup
+						,mapStats ,mapParams ,mapExps ,mapCrits,treeModelGroups 
+						,fileName);
+				
+				
+			
+			
+			}
+			
+			
+		} catch (Exception e) {
+
+			System.err.println("ERROR during export: Caught exception "
+					+ e.getMessage());
+			e.printStackTrace();
+
+		} 
+		
+		
+		
+	}
+	
+	
 	/**
 	 * load all the information from a neodatis file
 	 */
@@ -585,8 +694,47 @@ public class PDLEditorApp {
 		return list;
 	}
 
+	
+	
 	/**
-	 * get all the groups in a tree (recursive call)
+	 * get a PDL group by its name in a tree (recursive call)
+	 * 
+	 * @param root
+	 *            root of the tree to search
+	 * @param list
+	 *            list of groups, to be initialized by caller
+	 * @return the PDL group searched for or null if not found
+	 * 
+	 * @note all PDL groups must have different names
+	 */
+	public static PDLGroup getGroupByName(DefaultMutableTreeNode root,
+			String theGroupName) {
+
+		PDLGroup rootGroup = (PDLGroup) root.getUserObject();
+		String groupName = rootGroup.getName();
+		
+		if(groupName.equals(theGroupName)) {
+			return rootGroup;
+		}
+		
+
+		@SuppressWarnings("rawtypes")
+		Enumeration children = root.children();
+		if (children != null) {
+			while (children.hasMoreElements()) {
+				@SuppressWarnings("unused")
+				PDLGroup g = getGroupByName(
+						(DefaultMutableTreeNode) children.nextElement(), theGroupName);
+				if(g!=null) return g;
+			}
+		}
+
+		return null; // group was not found
+	}	
+	
+	
+	/**
+	 * get all the PDL groups in a tree (recursive call)
 	 * 
 	 * @param root
 	 *            root of the tree to search
@@ -594,7 +742,36 @@ public class PDLEditorApp {
 	 *            list of groups, to be initialized by caller
 	 * @return list of groups in the tree
 	 */
-	public static ArrayList<String> getAllGroups(DefaultMutableTreeNode root,
+	public static ArrayList<PDLGroup> getAllGroups(DefaultMutableTreeNode root,
+			ArrayList<PDLGroup> list) {
+
+		PDLGroup rootGroup = (PDLGroup) root.getUserObject();
+		list.add(rootGroup);
+
+		@SuppressWarnings("rawtypes")
+		Enumeration children = root.children();
+		if (children != null) {
+			while (children.hasMoreElements()) {
+				@SuppressWarnings("unused")
+				ArrayList<PDLGroup> l = getAllGroups(
+						(DefaultMutableTreeNode) children.nextElement(), list);
+
+			}
+		}
+
+		return list;
+	}	
+	
+	/**
+	 * get all the groups names in a tree (recursive call)
+	 * 
+	 * @param root
+	 *            root of the tree to search
+	 * @param list
+	 *            list of groups names, to be initialized by caller
+	 * @return list of groups names in the tree
+	 */
+	public static ArrayList<String> getAllGroupsNames(DefaultMutableTreeNode root,
 			ArrayList<String> list) {
 
 		PDLGroup rootGroup = (PDLGroup) root.getUserObject();
@@ -609,7 +786,7 @@ public class PDLEditorApp {
 		if (children != null) {
 			while (children.hasMoreElements()) {
 				@SuppressWarnings("unused")
-				ArrayList<String> l = getAllGroups(
+				ArrayList<String> l = getAllGroupsNames(
 						(DefaultMutableTreeNode) children.nextElement(), list);
 
 			}
@@ -619,7 +796,7 @@ public class PDLEditorApp {
 	}
 
 	/**
-	 * get the groups which are direct children of the ROOT in a tree (=>
+	 * get the groups names of the groups which are direct children of the ROOT in a tree (=>
 	 * children at 1st level only)
 	 * 
 	 * @param root
@@ -628,7 +805,7 @@ public class PDLEditorApp {
 	 *            list of groups, to be initialized by caller
 	 * @return list of groups of the root in the tree
 	 */
-	public static ArrayList<String> getRootGroups(DefaultMutableTreeNode root,
+	public static ArrayList<String> getRootGroupsNames(DefaultMutableTreeNode root,
 			ArrayList<String> list) {
 
 		PDLGroup rootGroup = (PDLGroup) root.getUserObject();
@@ -727,7 +904,7 @@ public class PDLEditorApp {
 
 		// add the available groups to the combo box
 		ArrayList<String> listGroups = new ArrayList<String>();
-		listGroups = getRootGroups(
+		listGroups = getRootGroupsNames(
 				(DefaultMutableTreeNode) treeModelGroups.getRoot(), listGroups);
 
 		for (int g = 0; g < listGroups.size(); g++) {
@@ -2021,6 +2198,51 @@ public class PDLEditorApp {
 			}
 		});
 
+		
+		JButton btnExportToXML = new JButton("Export to XML");
+		btnExportToXML.setBounds(419, 726, 148, 29);
+		appFrame.getContentPane().add(btnExportToXML);
+		
+		
+		
+		btnExportToXML.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				exportToXML();
+			}
+		});
+		
+		JButton btnShowChildren = new JButton("Show Children"); // for debug
+		btnShowChildren.setBounds(873, 224, 117, 29);
+		appFrame.getContentPane().add(btnShowChildren);
+		
+		btnShowChildren.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// get node selected
+				DefaultMutableTreeNode selNode = (DefaultMutableTreeNode) treeGroups
+						.getLastSelectedPathComponent();
+				
+				PDLGroup selGroup = (PDLGroup) selNode.getUserObject();
+				String selGroupName = selGroup.getName();
+				
+				System.out.println("DEBUG: Selected group name="+selGroupName);
+				
+				ArrayList<PDLGroup> children1 = new ArrayList<PDLGroup>();
+				ArrayList<PDLGroup> children = selGroup.getChildren((DefaultMutableTreeNode) treeModelGroups.getRoot(), children1);
+				
+				for(PDLGroup child: children) {
+					
+					String childName = child.getName();
+					
+					System.out.println("DEBUG: Child="+childName);
+					
+					
+				}
+				
+				
+				
+			}
+		});
+	
 	}
 
 	public static String getAppVersion() {
@@ -2034,4 +2256,7 @@ public class PDLEditorApp {
 	public static String[] getAppAuthors() {
 		return appAuthors;
 	}
+	
+	
+	
 }
