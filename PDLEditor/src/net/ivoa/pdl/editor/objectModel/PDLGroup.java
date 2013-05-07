@@ -1,6 +1,9 @@
 package net.ivoa.pdl.editor.objectModel;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+
+import javax.swing.tree.DefaultMutableTreeNode;
 
 
 public class PDLGroup {
@@ -9,10 +12,43 @@ public class PDLGroup {
 	
 	private ArrayList<String> params; // list to hold the param names
 	
-	public List<PDLGroup> getChildren(){
-		//TODO
-//		return null;
+	/**
+	 * get the children of this group in the tree (recursive call)
+	 * @param root of the tree
+	 * @return a list of the children of the group or null if no children (to be initialized by caller)
+	 */
+	
+	public ArrayList<PDLGroup> getChildren(DefaultMutableTreeNode root, ArrayList<PDLGroup> list){
+		
+		PDLGroup rootGroup = (PDLGroup) root.getUserObject();
+		String rootGroupName = rootGroup.getName();
+		if(this.name.equals(rootGroupName)) {
+			@SuppressWarnings("rawtypes")
+			Enumeration children = root.children();	
+			while (children.hasMoreElements()) {
+				DefaultMutableTreeNode child = (DefaultMutableTreeNode) children.nextElement();
+				list.add((PDLGroup) child.getUserObject());
+			}
+			return list;
+		} else {
+			
+			@SuppressWarnings("rawtypes")
+			Enumeration children = root.children();
+			if (children != null) {
+				while (children.hasMoreElements()) {
+					ArrayList<PDLGroup> l = getChildren(
+							(DefaultMutableTreeNode) children.nextElement(), list);
+
+					if(l!=null) return l;
+				}
+			}
+			
+		}
+		
+		return null;
 	}
+	
+	
 	
 	public PDLGroup(String n) {
 		System.out.println("DEBUG PDLGroup.ctor: Creating new PDLGroup "+n);

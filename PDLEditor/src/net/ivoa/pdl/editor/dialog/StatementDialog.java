@@ -155,7 +155,7 @@ public class StatementDialog extends JDialog {
 		PDLEditorApp.printGroupsTree((DefaultMutableTreeNode) treeModelGroups.getRoot());
 		
 		// get the list of all groups
-		listGroups = PDLEditorApp.getAllGroups((DefaultMutableTreeNode) treeModelGroups.getRoot(), listGroups);
+		listGroups = PDLEditorApp.getAllGroupsNames((DefaultMutableTreeNode) treeModelGroups.getRoot(), listGroups);
 
 		// empty the list of groups
 		comboBoxModelGroups.removeAllElements();

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+
 import net.ivoa.parameter.model.ConditionalStatement;
 import net.ivoa.parameter.model.ConstraintOnGroup;
 import net.ivoa.parameter.model.Expression;
@@ -31,7 +34,9 @@ public class GroupWrapper {
 			Map<String, PDLStatement> mapStats,
 			Map<String, PDLParameter> mapParams,
 			Map<String, Expression> mapExpressions,
-			Map<String, PDLCriterion> mapCrits) {
+			Map<String, PDLCriterion> mapCrits,
+			DefaultTreeModel treeModelGroups
+			) {
 
 		ParameterGroup toReturn = new ParameterGroup();
 
@@ -73,10 +78,14 @@ public class GroupWrapper {
 
 		// Processing children
 		List<ParameterGroup> childrenGroups = new ArrayList<ParameterGroup>();
-		List<PDLGroup> children = group.getChildren();
+		
+		// Changed by RS to get the children
+		ArrayList<PDLGroup> children1 = new ArrayList<PDLGroup>();
+		List<PDLGroup> children = group.getChildren((DefaultMutableTreeNode) treeModelGroups.getRoot(),children1);
+		
 		for (PDLGroup currentChild : children) {
 			ParameterGroup tempChild = wrapToPDL(currentChild, mapStats,
-					mapParams, mapExpressions, mapCrits);
+					mapParams, mapExpressions, mapCrits, treeModelGroups);
 			childrenGroups.add(tempChild);
 		}
 

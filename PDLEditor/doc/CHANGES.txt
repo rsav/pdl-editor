@@ -1,12 +1,11 @@
 TODO
 - dans module Expression, rajouter la valeur de l'expression
 
-- dans module statement et PDLStatement rajouter commentaire (String)
 
-- dans Group Module ajouter methodes retournant
-  - Map<groupName,parameterName> : names of parameters used by a group
-  - Map<groupName,PDLParameter> : parameters used by a group
- 
+v0.6 2013-05-07 
+- added method getChildren(...) in PDLGroup for wrapper
+- added button to generate XML and its callback method in application 
+- wrappers added by Carlo 
 
 v0.5 2013-04-23 
 - added dialog for creating a AtomicParameter Expression
