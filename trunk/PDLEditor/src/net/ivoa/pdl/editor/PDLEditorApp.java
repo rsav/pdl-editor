@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -46,7 +47,9 @@ import javax.swing.tree.TreeSelectionModel;
 import net.ivoa.parameter.model.AtomicConstantExpression;
 import net.ivoa.parameter.model.AtomicParameterExpression;
 import net.ivoa.parameter.model.Expression;
+import net.ivoa.parameter.model.Function;
 import net.ivoa.parameter.model.FunctionExpression;
+import net.ivoa.parameter.model.Operation;
 import net.ivoa.parameter.model.ParameterReference;
 import net.ivoa.parameter.model.ParameterType;
 import net.ivoa.parameter.model.ParenthesisContent;
@@ -78,7 +81,7 @@ import org.neodatis.odb.Objects;
 
 public class PDLEditorApp {
 
-	static String appVersion = "0.6";
+	static String appVersion = "0.7";
 	static String appName = "PDL Editor";
 	static String[] appAuthors = { "Renaud Savalle (Paris Observatory)",
 			"Carlo Maria Zwolf (Paris Observatory)" };
@@ -98,7 +101,6 @@ public class PDLEditorApp {
 	private DefaultTreeModel treeModelGroups; // to store the groups
 	private JTree treeGroups; // to display the groups
 	private DefaultMutableTreeNode rootNode;
-	private JTextField textFieldExpName;
 
 	private MapListModel listModelCrits; // to store the criterions
 	private JList listCrits; // to display the criterions
@@ -138,14 +140,13 @@ public class PDLEditorApp {
 													// statements
 
 	private GroupsTreeModelListener treeModelGroupsListener;
-	private JTextField textFieldExpType;
-	private JTextField textFieldExpClass;
 	private JButton btnLoadDescription;
 
 	private JTextField textFieldParamPrecision;
 	private JTextField textFieldParamDimension;
 	private JTextField textFieldParamType;
 	private TreeMap<String, PDLCriterion> mapCrits;
+	private JPanel panelExpsProperties;
 
 	/**
 	 * Launch the application.
@@ -186,8 +187,8 @@ public class PDLEditorApp {
 		
 				
 				// get the PDL group name for inputs and output
-				String inputsGroupName = (String) comboBoxModelServiceInputs.getSelectedItem();
-				String outputsGroupName = (String) comboBoxModelServiceOutputs.getSelectedItem();
+				String inputsGroupName = (String) comboBoxModelServiceInputs.getSelectedItem(); // NB: can be null or "" if previously set to a valid choice
+				String outputsGroupName = (String) comboBoxModelServiceOutputs.getSelectedItem(); // idem 
 				
 				// Create the object svc
 				PDLService svc = new PDLService(textFieldServiceID.getText());
@@ -203,8 +204,10 @@ public class PDLEditorApp {
 				
 				// get PDL group corresponding to inputsGroupName 
 				PDLGroup inputsGroup;
+
+				System.out.println("DEBUG inputsGroupName="+inputsGroupName);
 				
-				if(inputsGroupName==null) {
+				if(inputsGroupName==null||inputsGroupName.equals(new String(""))) { 
 					JOptionPane.showMessageDialog(appFrame,"No group selected for inputs. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
 					return;
 				} else {
@@ -214,8 +217,10 @@ public class PDLEditorApp {
 				
 				// get PDL group corresponding to inputsGroupName 
 				PDLGroup outputsGroup;
-				
-				if(outputsGroupName==null) {
+
+				System.out.println("DEBUG outputsGroupName="+outputsGroupName);
+								
+				if(outputsGroupName==null||outputsGroupName.equals(new String(""))) {
 					JOptionPane.showMessageDialog(appFrame,"No group selected for outputs. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
 					return;
 				} else {
@@ -1563,6 +1568,7 @@ public class PDLEditorApp {
 
 		JSplitPane splitPaneExps = new JSplitPane();
 		splitPaneExps.setBounds(6, 295, 475, 180);
+		//splitPaneExps.
 		appFrame.getContentPane().add(splitPaneExps);
 
 		JPanel panelExpsMenu = new JPanel();
@@ -1570,22 +1576,26 @@ public class PDLEditorApp {
 		panelExpsMenu.setLayout(new GridLayout(0, 1, 0, 0));
 
 		// create a constant for creating expressions
-		List<String> constantValues = new ArrayList<String>();
-		constantValues.add("1.0");
+		List<String> constantValues1 = new ArrayList<String>();
+		constantValues1.add("1");
 		AtomicConstantExpression oneExp = new AtomicConstantExpression()
-				.withConstant(constantValues).withConstantType(
+				.withConstant(constantValues1).withConstantType(
 						ParameterType.INTEGER);
 		mapExps.put("_one", oneExp);
 
 		// add a dummy expression for testing
+		List<String> constantValues2 = new ArrayList<String>();
+		constantValues2.add("1.0");		
 		AtomicConstantExpression testExp1 = new AtomicConstantExpression()
-				.withConstant(constantValues).withConstantType(
+				.withConstant(constantValues2).withConstantType(
 						ParameterType.REAL);
 		mapExps.put("TE1", testExp1);
 
 		// add a dummy expression for testing
+		List<String> constantValues3 = new ArrayList<String>();
+		constantValues3.add("2.0");
 		AtomicConstantExpression testExp2 = new AtomicConstantExpression()
-				.withConstant(constantValues).withConstantType(
+				.withConstant(constantValues3).withConstantType(
 						ParameterType.REAL);
 		mapExps.put("TE2", testExp2);
 
@@ -1603,28 +1613,133 @@ public class PDLEditorApp {
 				String cmd = e.getActionCommand();
 				if (cmd.equals("comboBoxChanged")) {
 					String selExpName = (String) comboBoxExps.getSelectedItem();
+				
+					
 					if (selExpName != null) {
-						textFieldExpName.setText(selExpName);
-						// get the type
+						// get the expression and its class
 						Expression selExp = mapExps.get(selExpName);
 						Class selExpClass = selExp.getClass();
-						textFieldExpClass.setText(selExpClass.toString());
-						/*
-						 * AtomicConstantExpression
-						 * selExp1=(AtomicConstantExpression)selExp;
-						 * selExp1.getConstantType();
-						 */
+					
+						// these will be needed at the end of this block
+						Expression expPower = null;
+						Operation expOperation = null;
+						
+						
+						// Redraw panelExpsProperties with the common controls 
+						panelExpsProperties.removeAll();
+						panelExpsProperties.setVisible(false);
+						
+						JLabel lblExpClass = new JLabel("Class:");
+						lblExpClass.setBounds(6, 6, 61, 16);
+						panelExpsProperties.add(lblExpClass);
+
+						JTextField textFieldExpClass = new JTextField();
+						textFieldExpClass.setEditable(false);
+						textFieldExpClass.setBounds(74, 1, 124, 28);
+						panelExpsProperties.add(textFieldExpClass);
+						textFieldExpClass.setColumns(10);
+						
+						
+						JLabel lblExpPower = new JLabel("Power:");
+						lblExpPower.setBounds(6, 90, 61, 16);
+						panelExpsProperties.add(lblExpPower);
+
+						JTextField textFieldExpPower = new JTextField();
+						textFieldExpPower.setEditable(false);
+						textFieldExpPower.setBounds(74, 83, 124, 28);
+						panelExpsProperties.add(textFieldExpPower);
+						textFieldExpPower.setColumns(10);
+						
+						JLabel lblExpOperation = new JLabel("Operation:");
+						lblExpOperation.setBounds(6, 118, 71, 16);
+						panelExpsProperties.add(lblExpOperation);
+
+						JTextField textFieldExpOperation = new JTextField();
+						textFieldExpOperation.setEditable(false);
+						textFieldExpOperation.setBounds(74, 112, 124, 28);
+						panelExpsProperties.add(textFieldExpOperation);
+						textFieldExpOperation.setColumns(10);							
+						
+						JLabel lblExpOperand = new JLabel("Operand:");
+						lblExpOperand.setBounds(6, 146, 61, 16);
+						panelExpsProperties.add(lblExpOperand);
+
+						JTextField textFieldExpOperand = new JTextField();
+						textFieldExpOperand.setEditable(false);
+						textFieldExpOperand.setBounds(74, 142, 124, 28);
+						panelExpsProperties.add(textFieldExpOperand);
+						textFieldExpOperand.setColumns(10);							
+						
+						
 						if (selExpClass == AtomicConstantExpression.class) {
+							
+							// Draw the controls for AtomicConstantExpression on panelExpsProperties
+							JLabel lblExpType = new JLabel("Type:");
+							lblExpType.setBounds(6, 34, 61, 16);
+							panelExpsProperties.add(lblExpType);
+
+							JTextField textFieldExpType = new JTextField();
+							textFieldExpType.setEditable(false);
+							textFieldExpType.setBounds(74, 29, 124, 28);
+							panelExpsProperties.add(textFieldExpType);
+							textFieldExpType.setColumns(10);
+							
+							
+							JLabel lblExpConstant = new JLabel("Constant:");
+							lblExpConstant.setBounds(6, 62, 61, 16);
+							panelExpsProperties.add(lblExpConstant);
+
+							JTextField textFieldExpConstant = new JTextField();
+							textFieldExpConstant.setEditable(false);
+							textFieldExpConstant.setBounds(74, 57, 124, 28);
+							panelExpsProperties.add(textFieldExpConstant);
+							textFieldExpConstant.setColumns(10);
+							
+							
+							// make the panel visible
+							panelExpsProperties.setVisible(true);
+							
+							// Fill the controls of panelExpsProperties
 							textFieldExpClass.setText("ACE");
-							AtomicConstantExpression selExp1 = (AtomicConstantExpression) selExp;
-							ParameterType selExpType = selExp1
-									.getConstantType();
+							
+							
+							AtomicConstantExpression selACE = (AtomicConstantExpression) selExp;
+							ParameterType selExpType = selACE.getConstantType();
 							textFieldExpType.setText(selExpType.toString());
+							
+							List<String> selExpConstant = selACE.getConstant();
+							String constant = Utilities.getInstance().expressionConstantToString(selExpConstant);
+							textFieldExpConstant.setText(constant);
+							
+							
+							// get the power and operation of the ACE
+							expPower = selACE.getPower();
+							expOperation = selACE.getOperation();
+							
+							
+							
 						}
 						if (selExpClass == AtomicParameterExpression.class) {
+							
+							// Draw the controls for AtomicParameterExpression on panelExpsProperties
+							
+							JLabel lblExpParam = new JLabel("Param:");
+							lblExpParam.setBounds(6, 34, 61, 16);
+							panelExpsProperties.add(lblExpParam);
+
+							JTextField textFieldExpParam = new JTextField();
+							textFieldExpParam.setEditable(false);
+							textFieldExpParam.setBounds(74, 29, 124, 28);
+							panelExpsProperties.add(textFieldExpParam);
+							textFieldExpParam.setColumns(10);
+							
+							// make the panel visible
+							panelExpsProperties.setVisible(true);
+							
+							// Fill the controls of panelExpsProperties
 							textFieldExpClass.setText("APE");
-							AtomicParameterExpression selExp1 = (AtomicParameterExpression) selExp;
-							ParameterReference selExpParameterRef = selExp1
+							AtomicParameterExpression selAPE = (AtomicParameterExpression) selExp;
+							ParameterReference selExpParameterRef = selAPE
 									.getParameterRef(); // get the parameter
 														// reference
 							String selExpParameterName = selExpParameterRef
@@ -1640,41 +1755,165 @@ public class PDLEditorApp {
 																// name
 							ParameterType selExpParameterType = selExpParameter
 									.getType(); // get the PDLParameter type
-							textFieldExpType.setText(selExpParameterType
-									.toString());
+							
+							
+							textFieldExpParam.setText(selExpParameterName);
+							
+							
+							// get the power and operation of the APE
+							expPower = selAPE.getPower();
+							expOperation = selAPE.getOperation();
+							
+							
 						}
 						if (selExpClass == ParenthesisContent.class) {
-							textFieldExpClass.setText("PCE");
-							ParenthesisContent selExp1 = (ParenthesisContent) selExp;
-							// Expression selExp2 = selExp1.getExpression(); //
-							// get the expression in the ParenthesisContent
-							// Expression
+							// Draw the controls for AtomicParameterExpression on panelExpsProperties
+							
+							JLabel lblExpExp = new JLabel("Exp:");
+							lblExpExp.setBounds(6, 34, 61, 16);
+							panelExpsProperties.add(lblExpExp);
 
-							// TODO: I don't know how to get the type of a
-							// ParenthesisContent Expression
-							textFieldExpType.setText("unknown");
+							JTextField textFieldExpExp = new JTextField();
+							textFieldExpExp.setEditable(false);
+							textFieldExpExp.setBounds(74, 29, 124, 28);
+							panelExpsProperties.add(textFieldExpExp);
+							textFieldExpExp.setColumns(10);
+							
+							
+							// make the panel visible
+							panelExpsProperties.setVisible(true);
+							
+							// Fill the controls of panelExpsProperties
+							textFieldExpClass.setText("PCE");
+							ParenthesisContent selPCE = (ParenthesisContent) selExp;
+							
+							// get the expression inside the parenthesis
+							Expression selExpInside = selPCE.getExpression(); // get the expression in the ParenthesisContent Expression
+							
+							// get the name of the expression selExpInside
+							// from http://stackoverflow.com/questions/1383797/java-hashmap-how-to-get-key-from-value
+							String key = "unknown";
+							Iterator<Entry<String, Expression>> iter = mapExps.entrySet().iterator();
+							while (iter.hasNext()) {
+							    Entry<String, Expression> entry = iter.next();
+							    if (entry.getValue().equals(selExpInside)) {
+							        key = entry.getKey();
+							    }
+							}
+							
+							textFieldExpExp.setText(key);
+							
+							// get the power and operation of the PCE
+							expPower = selPCE.getPower();
+							expOperation = selPCE.getOperation();
 						}
 						if (selExpClass == FunctionExpression.class) {
+							// Draw the controls for AtomicParameterExpression on panelExpsProperties
+							
+							JLabel lblExpExp = new JLabel("Exp:");
+							lblExpExp.setBounds(6, 34, 61, 16);
+							panelExpsProperties.add(lblExpExp);
+
+							JTextField textFieldExpExp = new JTextField();
+							textFieldExpExp.setEditable(false);
+							textFieldExpExp.setBounds(74, 29, 124, 28);
+							panelExpsProperties.add(textFieldExpExp);
+							textFieldExpExp.setColumns(10);
+							
+							
+							JLabel lblExpFunction = new JLabel("Function:");
+							lblExpFunction.setBounds(6, 62, 61, 16);
+							panelExpsProperties.add(lblExpFunction);
+
+							JTextField textFieldExpFunction = new JTextField();
+							textFieldExpFunction.setEditable(false);
+							textFieldExpFunction.setBounds(74, 57, 124, 28);
+							panelExpsProperties.add(textFieldExpFunction);
+							textFieldExpFunction.setColumns(10);
+							
+							
+							
+							// make the panel visible
+							panelExpsProperties.setVisible(true);
+							
 							textFieldExpClass.setText("FE");
-							FunctionExpression selExp1 = (FunctionExpression) selExp;
-							// Expression selExp2 = selExp1.getExpression(); //
-							// get the expression in the ParenthesisContent
-							// Expression
-
-							// TODO: I don't know how to get the type of a
-							// FunctionExpression Expression
-							textFieldExpType.setText("unknown");
-
+							FunctionExpression selFE = (FunctionExpression) selExp;
+							
+							
+							
+							// get the function
+							Function selExpFun = selFE.getFunction();
+							
+							// get the expression inside the function
+							Expression selExpInside = selExpFun.getExpression();
+							
+							// get the name of the expression selExpInside
+							// from http://stackoverflow.com/questions/1383797/java-hashmap-how-to-get-key-from-value
+							String key = "unknown";
+							
+							
+							Iterator<Entry<String, Expression>> iter = mapExps.entrySet().iterator();
+							while (iter.hasNext()) {
+							    Entry<String, Expression> entry = iter.next();
+							    if (entry.getValue().equals(selExpInside)) {
+							        key = entry.getKey();
+							    }
+							}
+							
+							
+							textFieldExpExp.setText(key);
+							
+							
+							
+							// get the string representing the function name
+							String function = selExpFun.getFunctionName().toString();
+							
+							textFieldExpFunction.setText(function);
+		
+							// get the power and operation of the FE
+							expPower = selFE.getPower();
+							expOperation = selFE.getOperation();
 						}
 
+						
+					
+						// display the power for the selected expression
+						String power = "null";
+						if(expPower!=null) {
+							// we have to assume that the power is a AtomicConstantExpression here to getConstant !
+							power = Utilities.getInstance().expressionConstantToString(((AtomicConstantExpression) expPower).getConstant());
+						}
+						textFieldExpPower.setText(power);
+						
+						// display the operation and operand for the selected expression
+						String operation = "null";
+						String operand = "null";
+						
+						if(expOperation!=null) {
+							operation = expOperation.getOperationType().toString();
+							AtomicConstantExpression expOperand = (AtomicConstantExpression) expOperation.getExpression();
+							if(expOperand!=null) {
+								operand = Utilities.getInstance().expressionConstantToString(expOperand.getConstant());
+							}
+						}
+						textFieldExpOperation.setText(operation);
+						textFieldExpOperand.setText(operand);
+						
+						
+						
+						
+						
+						
 					} else {
-						textFieldExpName.setText("");
-						textFieldExpClass.setText("");
-						textFieldExpType.setText("");
+						
+						//textFieldExpClass.setText("");
+						//textFieldExpType.setText("");
 
 					}
 				}
 			}
+
+			
 		});
 
 		final JButton btnNewAtomicConstantExpression = new JButton(
@@ -1827,10 +2066,7 @@ public class PDLEditorApp {
 																		// select
 																		// any
 
-									// clear the text fields
-									textFieldExpName.setText("");
-									textFieldExpClass.setText("");
-									textFieldExpType.setText("");
+							
 
 								} else {
 									comboBoxExps.setSelectedIndex(0); // select
@@ -1854,39 +2090,9 @@ public class PDLEditorApp {
 
 		});
 
-		JPanel panelExpsProperties = new JPanel();
+	    panelExpsProperties = new JPanel();
 		splitPaneExps.setRightComponent(panelExpsProperties);
 		panelExpsProperties.setLayout(null);
-
-		JLabel lblExpName = new JLabel("Name:");
-		lblExpName.setBounds(6, 11, 61, 16);
-		panelExpsProperties.add(lblExpName);
-
-		textFieldExpName = new JTextField();
-		textFieldExpName.setEditable(false);
-		textFieldExpName.setBounds(64, 5, 138, 28);
-		panelExpsProperties.add(textFieldExpName);
-		textFieldExpName.setColumns(10);
-
-		JLabel lblExpType = new JLabel("Type:");
-		lblExpType.setBounds(6, 63, 61, 16);
-		panelExpsProperties.add(lblExpType);
-
-		textFieldExpType = new JTextField();
-		textFieldExpType.setEditable(false);
-		textFieldExpType.setBounds(64, 57, 134, 28);
-		panelExpsProperties.add(textFieldExpType);
-		textFieldExpType.setColumns(10);
-
-		JLabel lblExpClass = new JLabel("Class:");
-		lblExpClass.setBounds(6, 35, 61, 16);
-		panelExpsProperties.add(lblExpClass);
-
-		textFieldExpClass = new JTextField();
-		textFieldExpClass.setEditable(false);
-		textFieldExpClass.setBounds(64, 29, 134, 28);
-		panelExpsProperties.add(textFieldExpClass);
-		textFieldExpClass.setColumns(10);
 
 		// ---------- Criterions Module -----------
 

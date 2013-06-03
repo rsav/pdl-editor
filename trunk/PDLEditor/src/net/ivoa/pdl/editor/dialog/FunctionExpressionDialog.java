@@ -117,8 +117,17 @@ public class FunctionExpressionDialog extends JDialog {
 		comboBoxOperand.setBounds(302, 55, 121, 27);
 		contentPanel.add(comboBoxOperand);
 		
-		mapExpsForPower = new TreeMap<String, Expression>(mapExps);
+		// Create map of expressions that can be used for power
+		mapExpsForPower = new TreeMap<String, Expression>(); // to be filled below
 		mapExpsForPower.put("",null); // since the power is not mandatory, we provide a choice for no expression
+		// power must be an AtomicConstantExpression: remove expressions which are not of class AtomicConstantExpression
+		for(String key: mapExps.keySet()) {
+			Expression exp = mapExps.get(key);
+			Class expClass = exp.getClass(); // get the class of the expression
+			if(expClass == AtomicConstantExpression.class) {
+				mapExpsForPower.put(key, exp);
+			}
+		}
 		
 		comboBoxModelPower = new MapComboBoxModel(mapExpsForPower);
 		
