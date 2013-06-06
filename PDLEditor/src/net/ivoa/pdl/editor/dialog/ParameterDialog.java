@@ -26,6 +26,10 @@ import net.ivoa.pdl.editor.guiComponent.MapComboBoxModel;
 import net.ivoa.pdl.editor.objectModel.PDLParameter;
 import javax.swing.JRadioButton;
 
+import visitors.GeneralParameterVisitor;
+
+import CommonsObjects.GeneralParameter;
+
 public class ParameterDialog extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
@@ -341,6 +345,13 @@ public class ParameterDialog extends JDialog {
 							
 							// get the constant text
 							String newACEConstant = textFieldDimension.getText();
+							
+							try{
+								GeneralParameter param = new GeneralParameter(newACEConstant, newACEType, "", new GeneralParameterVisitor());
+							}catch(Exception e1){
+								JOptionPane.showMessageDialog(getContentPane(), e1.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
+							}
+							
 							
 							// parse the string representing a vector
 							String delims = ";";
