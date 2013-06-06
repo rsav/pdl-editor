@@ -55,6 +55,7 @@ public class ParameterDialog extends JDialog {
 	public final static int ParameterDialogModeModify = 2;
 	private JTextField textFieldDimension;
 	private JTextField textFieldPrecision;
+	private MapComboBoxModel comboBoxModelExps;
 	
 
 
@@ -67,13 +68,17 @@ public class ParameterDialog extends JDialog {
 	 * @param cp combo box for the parameters
 	 * @param me treemap containing the expressions defined
 	 */
-	public ParameterDialog(int mode, TreeMap<String,PDLParameter> mp, MapComboBoxModel mc, JComboBox cp, TreeMap<String,Expression> me) {
+	public ParameterDialog(int mode, TreeMap<String,PDLParameter> mp, 
+			MapComboBoxModel mc, JComboBox cp, TreeMap<String,Expression> me,
+			MapComboBoxModel mee ) {
 		
 		dialogMode = mode;
 		mapParams = mp;
 		comboBoxModelParams = mc;
 		comboBoxParams = cp;
 		mapExps = me;
+		comboBoxModelExps = mee;
+		
 		
 		
 		setBounds(100, 100, 493, 300);
@@ -356,7 +361,9 @@ public class ParameterDialog extends JDialog {
 							System.out.println("DEBUG DEBUG ParameterDialog.okButton: Adding new expression to mapExps");
 							mapExps.put(newDimension,newACE);
 							
-							
+							// signals the model that we have updated the map
+							comboBoxModelExps.actionPerformed(new ActionEvent(okButton,0,"update"));
+					    	
 							
 						} else {	// get the dimension expression
 							newDimension = (String) comboBoxDimension.getSelectedItem();

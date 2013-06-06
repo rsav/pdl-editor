@@ -9,12 +9,21 @@ TODO
     Dimension : [ ] menu
                 [ ] champ (entier)
     Possibility to use GeneralParameter creation to check the validity: cf test.java
+
+
+- idem for precision: create an ACE of type REAL vs INTEGER for dimension
+
     
 - Service module; 
   - service ID will be a URL, make field larger to right of box 
 
 
 - When deleting the last expression, the panel on the right of the expression module should be empty
+
+
+
+
+
 
 v0.8 
 - checks before exporting to XML

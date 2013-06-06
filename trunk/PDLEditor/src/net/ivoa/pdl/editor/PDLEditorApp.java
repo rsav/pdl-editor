@@ -1090,7 +1090,7 @@ public class PDLEditorApp {
 
 				ParameterDialog newParameterDialog = new ParameterDialog(
 						ParameterDialog.ParameterDialogModeCreate, mapParams,
-						comboBoxModelParams, comboBoxParams, mapExps);
+						comboBoxModelParams, comboBoxParams, mapExps, comboBoxModelExps);
 				newParameterDialog.setLocationRelativeTo(appFrame); // dialog
 																	// must
 																	// appear in
@@ -1153,7 +1153,7 @@ public class PDLEditorApp {
 						ParameterDialog editParameterDialog = new ParameterDialog(
 								ParameterDialog.ParameterDialogModeModify,
 								mapParams, comboBoxModelParams, comboBoxParams,
-								mapExps);
+								mapExps, comboBoxModelExps);
 						editParameterDialog.setLocationRelativeTo(appFrame); // dialog
 																				// must
 																				// appear
