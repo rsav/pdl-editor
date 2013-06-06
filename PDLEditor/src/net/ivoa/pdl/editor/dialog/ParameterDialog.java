@@ -333,10 +333,11 @@ public class ParameterDialog extends JDialog {
 							
 						if(rdbtnDimensionField.isSelected()) {
 							
-							
+							// TODO: increment number in last _ace
+							int counter = getInstancesOfAutomaticACE();
 							
 							// create a new ACE called using the constant provided
-							newDimension = "_ace"; // TODO: add unique number
+							newDimension = "_ace"+counter; 
 							
 							
 							
@@ -346,11 +347,14 @@ public class ParameterDialog extends JDialog {
 							// get the constant text
 							String newACEConstant = textFieldDimension.getText();
 							
+							// Test that the constant is of the right type
 							try{
 								GeneralParameter param = new GeneralParameter(newACEConstant, newACEType, "", new GeneralParameterVisitor());
 							}catch(Exception e1){
 								JOptionPane.showMessageDialog(getContentPane(), e1.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
+								return;  // end the method
 							}
+							
 							
 							
 							// parse the string representing a vector
@@ -462,6 +466,17 @@ public class ParameterDialog extends JDialog {
 					
 				} // else	
 				
+			}
+
+			protected int getInstancesOfAutomaticACE() {
+				int counter=1;
+				for(String expName: mapExps.keySet()) {
+					if(expName.contains("_ace")) {
+						counter++;
+					}
+					
+				}
+				return counter;
 			}
 		});
 	

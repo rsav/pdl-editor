@@ -21,6 +21,7 @@ TODO
 - When deleting the last expression, the panel on the right of the expression module should be empty
 
 
+- New ACE: check that constant is of type selected (use GeneralParameter trick)
 
 
 
