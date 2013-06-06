@@ -16,6 +16,10 @@ TODO
 
 - When deleting the last expression, the panel on the right of the expression module should be empty
 
+v0.8 
+- checks before exporting to XML
+- Parameter Module, new parameter, dimension and precision: radio buttons to select menu or field to enter constant of new ACE
+
 
 v0.7 2013-06-03 
 - removed the fields on the right of the expression module
