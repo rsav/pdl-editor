@@ -4,8 +4,11 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
+import java.util.List;
 import java.util.TreeMap;
 
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -16,10 +19,12 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JComboBox;
 
+import net.ivoa.parameter.model.AtomicConstantExpression;
 import net.ivoa.parameter.model.Expression;
 import net.ivoa.parameter.model.ParameterType;
 import net.ivoa.pdl.editor.guiComponent.MapComboBoxModel;
 import net.ivoa.pdl.editor.objectModel.PDLParameter;
+import javax.swing.JRadioButton;
 
 public class ParameterDialog extends JDialog {
 
@@ -48,6 +53,8 @@ public class ParameterDialog extends JDialog {
 	
 	public final static int ParameterDialogModeCreate = 1;
 	public final static int ParameterDialogModeModify = 2;
+	private JTextField textFieldDimension;
+	private JTextField textFieldPrecision;
 	
 
 
@@ -155,11 +162,11 @@ public class ParameterDialog extends JDialog {
 		
 		comboBoxModelDimension = new MapComboBoxModel(mapExps);
 		comboBoxDimension = new JComboBox(comboBoxModelDimension);
-		comboBoxDimension.setBounds(312, 90, 134, 27);
+		comboBoxDimension.setBounds(335, 90, 111, 27);
 		contentPanel.add(comboBoxDimension);
 		
 		JLabel lblPrecision = new JLabel("Precision:");
-		lblPrecision.setBounds(212, 122, 83, 16);
+		lblPrecision.setBounds(212, 156, 83, 16);
 		contentPanel.add(lblPrecision);
 		
 		// since the precision is not mandatory allow for an emtpy string
@@ -169,8 +176,48 @@ public class ParameterDialog extends JDialog {
 		
 		comboBoxModelPrecision = new MapComboBoxModel(mapExpsForPrecision);
 		comboBoxPrecision = new JComboBox(comboBoxModelPrecision);
-		comboBoxPrecision.setBounds(312, 118, 134, 27);
+		comboBoxPrecision.setBounds(335, 152, 111, 27);
 		contentPanel.add(comboBoxPrecision);
+		
+		JRadioButton rdbtnDimensionMenu = new JRadioButton("");
+		rdbtnDimensionMenu.setBounds(305, 90, 28, 23);
+		rdbtnDimensionMenu.setSelected(true);
+		contentPanel.add(rdbtnDimensionMenu);
+		
+		final JRadioButton rdbtnDimensionField = new JRadioButton("");
+		rdbtnDimensionField.setBounds(305, 116, 28, 23);
+		contentPanel.add(rdbtnDimensionField);
+		
+		ButtonGroup btngroupDimension = new ButtonGroup();
+		btngroupDimension.add(rdbtnDimensionMenu);
+		btngroupDimension.add(rdbtnDimensionField);
+		
+		
+		textFieldDimension = new JTextField();
+		textFieldDimension.setBounds(335, 116, 111, 28);
+		contentPanel.add(textFieldDimension);
+		textFieldDimension.setColumns(10);
+		
+		JRadioButton rdbtnPrecisionMenu = new JRadioButton("");
+		rdbtnPrecisionMenu.setBounds(305, 152, 28, 23);
+		rdbtnPrecisionMenu.setSelected(true);
+		contentPanel.add(rdbtnPrecisionMenu);
+		
+		JRadioButton rdbtnPrecisionField = new JRadioButton("");
+		rdbtnPrecisionField.setBounds(305, 180, 28, 23);
+		contentPanel.add(rdbtnPrecisionField);
+		
+		ButtonGroup btngroupPrecision = new ButtonGroup();
+		btngroupPrecision.add(rdbtnPrecisionMenu);
+		btngroupPrecision.add(rdbtnPrecisionField);
+				
+		
+		
+		
+		textFieldPrecision = new JTextField();
+		textFieldPrecision.setBounds(335, 180, 111, 28);
+		contentPanel.add(textFieldPrecision);
+		textFieldPrecision.setColumns(10);
 		
 		// if dialog is for modifying an existing parameter, populate the fields with the attribute of that existing parameter
 		if(dialogMode==ParameterDialogModeModify) {
@@ -219,12 +266,7 @@ public class ParameterDialog extends JDialog {
 					
 				} else {
 				
-				
-					
-					
-					
-				
-					
+
 					// check the name is not already used in an existing parameter
 					boolean nameUsed=false;
 					
@@ -276,8 +318,49 @@ public class ParameterDialog extends JDialog {
 						// get the new unit
 						String newUnit = textFieldUnit.getText();
 						
-						// get the dimension expression
-						String newDimension = (String) comboBoxDimension.getSelectedItem();
+						
+						
+						String newDimension=null;
+							
+						if(rdbtnDimensionField.isSelected()) {
+							
+							
+							
+							// create a new ACE called using the constant provided
+							newDimension = "_ace"; // TODO: add unique number
+							
+							
+							
+							// set the type of the ACE for dimension
+							ParameterType newACEType = ParameterType.INTEGER; 
+							
+							// get the constant text
+							String newACEConstant = textFieldDimension.getText();
+							
+							// parse the string representing a vector
+							String delims = ";";
+							String[] newACEConstants = newACEConstant.split(delims);
+							
+							// put the constants in a list
+							List<String> newACEConstantList = Arrays.asList(newACEConstants); 
+							
+							System.out.println("DEBUG ParameterDialog.okButton: Creating new ACE name="+newDimension);
+							System.out.println("DEBUG ParameterDialog.okButton: Creating new ACE type="+newACEType);
+							System.out.println("DEBUG ParameterDialog.okButton: Creating new ACE constant list="+newACEConstantList);
+							
+							// create the new expression of type AtomicConstantExpression
+							AtomicConstantExpression newACE = new AtomicConstantExpression()
+																.withConstantType(newACEType)
+																.withConstant(newACEConstantList);
+							
+							System.out.println("DEBUG DEBUG ParameterDialog.okButton: Adding new expression to mapExps");
+							mapExps.put(newDimension,newACE);
+							
+							
+							
+						} else {	// get the dimension expression
+							newDimension = (String) comboBoxDimension.getSelectedItem();
+						}
 						
 						if(newDimension==null) {
 							JOptionPane.showMessageDialog(getContentPane(),"The dimension needs to be an expression and cannot be empty\nCannot create/modify parameter","Error",JOptionPane.ERROR_MESSAGE);
@@ -288,19 +371,10 @@ public class ParameterDialog extends JDialog {
 							// get the type of the dimension
 							//newDimensionType=mapExps.get(newDimension)
 							
-							// get the precision expression
+							// get the precision expression, NB: it can be null
 							String newPrecision = (String) comboBoxPrecision.getSelectedItem();
 									
-							
-							System.out.println("DEBUG ParameterDialog.okButton: type="+newType);
-							System.out.println("DEBUG ParameterDialog.okButton: ucd="+newUCD);
-							System.out.println("DEBUG ParameterDialog.okButton: utype="+newUType);
-							System.out.println("DEBUG ParameterDialog.okButton: skoss="+newSkoss);
-							System.out.println("DEBUG ParameterDialog.okButton: unit="+newUnit);
-							System.out.println("DEBUG ParameterDialog.okButton: dimension="+newDimension);
-							System.out.println("DEBUG ParameterDialog.okButton: precision="+newPrecision);
-							
-							
+
 							
 							PDLParameter newParam = null; // will be init just later
 							

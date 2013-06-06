@@ -184,25 +184,36 @@ public class PDLEditorApp {
 		try {
 
 			
-		
+				// get the service id, name and description
+				String serviceID = textFieldServiceID.getText();
+				String serviceName = textFieldServiceName.getText();
+				String serviceDesc = textAreaServiceDesc.getText();
+				
+				// check that the service id is set
+				if(serviceID==null||serviceID.equals(new String(""))) {
+					JOptionPane.showMessageDialog(appFrame,"Field Service ID is not filled in. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				// check that the service name is set
+				if(serviceName==null||serviceName.equals(new String(""))) {
+					JOptionPane.showMessageDialog(appFrame,"Field Service Name is not filled in. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				// check that the service description is set
+				if(serviceDesc==null||serviceDesc.equals(new String(""))) {
+					JOptionPane.showMessageDialog(appFrame,"Field Service Description is not filled in. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
+					return;
+				}				
 				
 				// get the PDL group name for inputs and output
 				String inputsGroupName = (String) comboBoxModelServiceInputs.getSelectedItem(); // NB: can be null or "" if previously set to a valid choice
 				String outputsGroupName = (String) comboBoxModelServiceOutputs.getSelectedItem(); // idem 
 				
-				// Create the object svc
-				PDLService svc = new PDLService(textFieldServiceID.getText());
-				svc.setName(textFieldServiceName.getText());
-				svc.setDescription(textAreaServiceDesc.getText());
-				svc.setInputsGroup(inputsGroupName);
-				svc.setOutputsGroup(outputsGroupName);
-				svc.setParameters(mapParams);
-				svc.setGroups(treeModelGroups);
-				svc.setExpressions(mapExps);
-				svc.setCriterions(mapCrits);
-				svc.setStatements(mapStats);
+			
 				
-				// get PDL group corresponding to inputsGroupName 
+				// check that there is a group selected for input and get PDL group corresponding to inputsGroupName 
 				PDLGroup inputsGroup;
 
 				System.out.println("DEBUG inputsGroupName="+inputsGroupName);
@@ -215,7 +226,7 @@ public class PDLEditorApp {
 					System.out.println("DEBUG PDLEditorApp.exportToXML: found input group="+inputsGroup);
 				}
 				
-				// get PDL group corresponding to inputsGroupName 
+				// check there is a group selected for output and get PDL group corresponding to inputsGroupName 
 				PDLGroup outputsGroup;
 
 				System.out.println("DEBUG outputsGroupName="+outputsGroupName);
@@ -227,9 +238,14 @@ public class PDLEditorApp {
 					outputsGroup = getGroupByName((DefaultMutableTreeNode) treeModelGroups.getRoot(),outputsGroupName);
 					System.out.println("DEBUG PDLEditorApp.exportToXML: found input group="+outputsGroup);
 				}
+			
+				// check that the groups selected for input and output are not the same
+				if(inputsGroupName.equals(outputsGroupName)) {
+					JOptionPane.showMessageDialog(appFrame,"Inputs group and outputs group are the same. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
+					return;	
+				}
 				
-				
-				
+
 				
 				
 				
@@ -258,8 +274,21 @@ public class PDLEditorApp {
 
 					}
 				
-				
-				ServiceWrapper.getInstance().serializeToXML(svc
+					// Create the object svc
+					PDLService svc = new PDLService(serviceID);
+					svc.setName(serviceName);
+					svc.setDescription(serviceDesc);
+					svc.setInputsGroup(inputsGroupName);
+					svc.setOutputsGroup(outputsGroupName);
+					svc.setParameters(mapParams);
+					svc.setGroups(treeModelGroups);
+					svc.setExpressions(mapExps);
+					svc.setCriterions(mapCrits);
+					svc.setStatements(mapStats);
+					
+					
+					// Serialize the object svc into the XML file
+					ServiceWrapper.getInstance().serializeToXML(svc
 						,inputsGroup
 						,outputsGroup
 						,mapStats ,mapParams ,mapExps ,mapCrits,treeModelGroups 
@@ -2347,12 +2376,12 @@ public class PDLEditorApp {
 		scrollPaneServiceDesc.setViewportView(textAreaServiceDesc);
 
 		textFieldServiceID = new JTextField();
-		textFieldServiceID.setBounds(114, 0, 134, 28);
+		textFieldServiceID.setBounds(114, 0, 355, 28);
 		panelService.add(textFieldServiceID);
 		textFieldServiceID.setColumns(10);
 
 		textFieldServiceName = new JTextField();
-		textFieldServiceName.setBounds(114, 28, 134, 28);
+		textFieldServiceName.setBounds(114, 28, 355, 28);
 		panelService.add(textFieldServiceName);
 		textFieldServiceName.setColumns(10);
 
