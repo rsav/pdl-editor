@@ -3,6 +3,7 @@ package net.ivoa.pdl.editor.wrapperToPDL;
 import java.util.Map;
 
 import net.ivoa.parameter.model.Expression;
+import net.ivoa.parameter.model.ParameterDependency;
 import net.ivoa.parameter.model.SingleParameter;
 import net.ivoa.pdl.editor.objectModel.PDLParameter;
 
@@ -28,6 +29,12 @@ public class ParameterWrapper {
 		toReturn.setUCD(param.getUCD());
 		toReturn.setUnit(param.getUnit());
 		toReturn.setUType(param.getUType());
+		
+		if(param.getRequired()){
+			toReturn.setDependency(ParameterDependency.REQUIRED);
+		}else{
+			toReturn.setDependency(ParameterDependency.OPTIONAL);
+		}
 		
 		return toReturn;
 	}
