@@ -1,3 +1,12 @@
+Notes de Carlo au 01/07/2013
+-> In the interface for creating a new parameter, add a radio button for choosing if the SingleParameter is
+optional or required.
+
+For this, I've changed the PDLParameter Class (by introducing the "required" Boolean 
+attribute, with related getter and setter) and the ParameterWrapper which produce the PDL XML description.
+
+
+
 TODO
 - dans module Expression, rajouter la valeur de l'expression
 
