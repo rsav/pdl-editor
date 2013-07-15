@@ -78,6 +78,7 @@ import net.ivoa.pdl.editor.guiComponent.MapListModel;
 import org.neodatis.odb.ODB;
 import org.neodatis.odb.ODBFactory;
 import org.neodatis.odb.Objects;
+import javax.swing.JCheckBox;
 
 public class PDLEditorApp {
 
@@ -147,6 +148,7 @@ public class PDLEditorApp {
 	private JTextField textFieldParamType;
 	private TreeMap<String, PDLCriterion> mapCrits;
 	private JPanel panelExpsProperties;
+	private JCheckBox checkboxParamReq;
 
 	/**
 	 * Launch the application.
@@ -1010,8 +1012,7 @@ public class PDLEditorApp {
 		mapParams = new TreeMap<String, PDLParameter>();
 
 		// add a dummy param for testing
-		System.out
-				.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam1");
+		System.out.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam1");
 		PDLParameter testParam1 = new PDLParameter();
 		testParam1.setType(ParameterType.INTEGER);
 		testParam1.setUCD("ucd1");
@@ -1020,11 +1021,11 @@ public class PDLEditorApp {
 		testParam1.setSkoss("skoss1");
 		testParam1.setPrecision("_one");
 		testParam1.setDimension("_one");
+		testParam1.setRequired(false);
 		mapParams.put("TP1", testParam1);
 
 		// add a dummy param for testing
-		System.out
-				.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam2");
+		System.out.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam2");
 		PDLParameter testParam2 = new PDLParameter();
 		testParam2.setType(ParameterType.REAL);
 		testParam2.setUCD("ucd2");
@@ -1033,6 +1034,7 @@ public class PDLEditorApp {
 		testParam2.setSkoss("skoss2");
 		testParam2.setPrecision("_one");
 		testParam2.setDimension("_one");
+		testParam2.setRequired(true);
 		mapParams.put("TP2", testParam2);
 
 		comboBoxModelParams = new MapComboBoxModel(mapParams);
@@ -1041,6 +1043,7 @@ public class PDLEditorApp {
 
 		// when parameter is selected, update its fields
 		comboBoxParams.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
 				String cmd = e.getActionCommand();
 				if (cmd.equals("comboBoxChanged")) {
@@ -1051,9 +1054,12 @@ public class PDLEditorApp {
 							.println("DEBUG: PDLEditorApp.ctor: selParamName="
 									+ selParamName);
 
+					
+					
 					if (selParamName != null) {
 
 						PDLParameter selParam = mapParams.get(selParamName);
+
 						textFieldParamName.setText(selParamName);
 						textFieldParamType.setText(selParam.getType().name());
 						textFieldParamUCD.setText(selParam.getUCD());
@@ -1062,6 +1068,9 @@ public class PDLEditorApp {
 						textFieldParamUnit.setText(selParam.getUnit());
 						textFieldParamPrecision.setText(selParam.getPrecision());
 						textFieldParamDimension.setText(selParam.getDimension());
+
+						//System.out.println("DEBUG: PDLEditorApp.ctor: param required is "+selParam.getRequired());
+						checkboxParamReq.setSelected(selParam.getRequired());
 
 					} else {
 						textFieldParamName.setText("");
@@ -1072,7 +1081,8 @@ public class PDLEditorApp {
 						textFieldParamUnit.setText("");
 						textFieldParamPrecision.setText("");
 						textFieldParamDimension.setText("");
-
+						checkboxParamReq.setSelected(false);
+						
 					}
 				}
 
@@ -1258,7 +1268,7 @@ public class PDLEditorApp {
 
 		textFieldParamName = new JTextField();
 		textFieldParamName.setEditable(false);
-		textFieldParamName.setBounds(119, 6, 134, 28);
+		textFieldParamName.setBounds(105, 6, 134, 28);
 		textFieldParamName.setColumns(10);
 
 		panelParamsProperties.add(textFieldParamName);
@@ -1273,7 +1283,7 @@ public class PDLEditorApp {
 
 		textFieldParamUCD = new JTextField();
 		textFieldParamUCD.setEditable(false);
-		textFieldParamUCD.setBounds(119, 58, 134, 28);
+		textFieldParamUCD.setBounds(105, 58, 134, 28);
 		textFieldParamUCD.setColumns(10);
 
 		panelParamsProperties.add(textFieldParamUCD);
@@ -1284,7 +1294,7 @@ public class PDLEditorApp {
 
 		textFieldParamUType = new JTextField();
 		textFieldParamUType.setEditable(false);
-		textFieldParamUType.setBounds(119, 79, 134, 28);
+		textFieldParamUType.setBounds(105, 79, 134, 28);
 		textFieldParamUType.setColumns(10);
 
 		panelParamsProperties.add(textFieldParamUType);
@@ -1295,7 +1305,7 @@ public class PDLEditorApp {
 
 		textFieldParamSkoss = new JTextField();
 		textFieldParamSkoss.setEditable(false);
-		textFieldParamSkoss.setBounds(119, 102, 134, 28);
+		textFieldParamSkoss.setBounds(105, 102, 134, 28);
 		panelParamsProperties.add(textFieldParamSkoss);
 		textFieldParamSkoss.setColumns(10);
 
@@ -1305,7 +1315,7 @@ public class PDLEditorApp {
 
 		textFieldParamUnit = new JTextField();
 		textFieldParamUnit.setEditable(false);
-		textFieldParamUnit.setBounds(119, 122, 134, 28);
+		textFieldParamUnit.setBounds(105, 122, 134, 28);
 		panelParamsProperties.add(textFieldParamUnit);
 		textFieldParamUnit.setColumns(10);
 
@@ -1319,21 +1329,26 @@ public class PDLEditorApp {
 
 		textFieldParamPrecision = new JTextField();
 		textFieldParamPrecision.setEditable(false);
-		textFieldParamPrecision.setBounds(119, 171, 134, 28);
+		textFieldParamPrecision.setBounds(105, 171, 134, 28);
 		panelParamsProperties.add(textFieldParamPrecision);
 		textFieldParamPrecision.setColumns(10);
 
 		textFieldParamDimension = new JTextField();
 		textFieldParamDimension.setEditable(false);
-		textFieldParamDimension.setBounds(119, 148, 134, 28);
+		textFieldParamDimension.setBounds(105, 148, 134, 28);
 		panelParamsProperties.add(textFieldParamDimension);
 		textFieldParamDimension.setColumns(10);
 
 		textFieldParamType = new JTextField();
 		textFieldParamType.setEditable(false);
-		textFieldParamType.setBounds(119, 30, 134, 28);
+		textFieldParamType.setBounds(105, 30, 134, 28);
 		panelParamsProperties.add(textFieldParamType);
 		textFieldParamType.setColumns(10);
+		
+		checkboxParamReq = new JCheckBox("Req");
+		checkboxParamReq.setEnabled(false);
+		checkboxParamReq.setBounds(244, 8, 128, 23);
+		panelParamsProperties.add(checkboxParamReq);
 
 		// ---------- Parameter Groups Module ----------
 
@@ -2491,7 +2506,4 @@ public class PDLEditorApp {
 	public static String[] getAppAuthors() {
 		return appAuthors;
 	}
-	
-	
-	
 }

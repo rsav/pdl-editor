@@ -29,6 +29,7 @@ import javax.swing.JRadioButton;
 import visitors.GeneralParameterVisitor;
 
 import CommonsObjects.GeneralParameter;
+import javax.swing.JCheckBox;
 
 public class ParameterDialog extends JDialog {
 
@@ -60,6 +61,7 @@ public class ParameterDialog extends JDialog {
 	private JTextField textFieldDimension;
 	private JTextField textFieldPrecision;
 	private MapComboBoxModel comboBoxModelExps;
+	private JCheckBox checkboxRequired;
 	
 
 
@@ -212,7 +214,7 @@ public class ParameterDialog extends JDialog {
 		rdbtnPrecisionMenu.setSelected(true);
 		contentPanel.add(rdbtnPrecisionMenu);
 		
-		JRadioButton rdbtnPrecisionField = new JRadioButton("");
+		final JRadioButton rdbtnPrecisionField = new JRadioButton("");
 		rdbtnPrecisionField.setBounds(305, 180, 28, 23);
 		contentPanel.add(rdbtnPrecisionField);
 		
@@ -228,6 +230,10 @@ public class ParameterDialog extends JDialog {
 		contentPanel.add(textFieldPrecision);
 		textFieldPrecision.setColumns(10);
 		
+		checkboxRequired = new JCheckBox("Required");
+		checkboxRequired.setBounds(6, 152, 128, 23);
+		contentPanel.add(checkboxRequired);
+		
 		// if dialog is for modifying an existing parameter, populate the fields with the attribute of that existing parameter
 		if(dialogMode==ParameterDialogModeModify) {
 			String selParamName = (String) comboBoxParams.getSelectedItem();
@@ -242,6 +248,8 @@ public class ParameterDialog extends JDialog {
 			
 			comboBoxDimension.setSelectedItem(selParam.getDimension());
 			comboBoxPrecision.setSelectedItem(selParam.getPrecision());
+			
+			checkboxRequired.setSelected(selParam.getRequired());
 			
 		}
 		
@@ -327,57 +335,26 @@ public class ParameterDialog extends JDialog {
 						// get the new unit
 						String newUnit = textFieldUnit.getText();
 						
-						
+						// get the required field
+						Boolean newRequired = checkboxRequired.isSelected();
 						
 						String newDimension=null;
 							
-						if(rdbtnDimensionField.isSelected()) {
-							
-							// TODO: increment number in last _ace
-							int counter = getInstancesOfAutomaticACE();
-							
-							// create a new ACE called using the constant provided
-							newDimension = "_ace"+counter; 
+					
+						if(rdbtnDimensionField.isSelected()) { // if button for automatic creation of ACE for Dimension is selected, create the ACE
 							
 							
-							
-							// set the type of the ACE for dimension
-							ParameterType newACEType = ParameterType.INTEGER; 
-							
-							// get the constant text
+							// get the constant text for the new automatic ACE
 							String newACEConstant = textFieldDimension.getText();
 							
-							// Test that the constant is of the right type
-							try{
-								GeneralParameter param = new GeneralParameter(newACEConstant, newACEType, "", new GeneralParameterVisitor());
-							}catch(Exception e1){
-								JOptionPane.showMessageDialog(getContentPane(), e1.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
-								return;  // end the method
-							}
+							// set the type of the ACE for dimension = an integer
+							ParameterType newACEType = ParameterType.INTEGER; 
 							
 							
+							// create a automatic ACE of type integer for Dimension
+							newDimension = createAutomaticACE(newACEConstant, newACEType);
 							
-							// parse the string representing a vector
-							String delims = ";";
-							String[] newACEConstants = newACEConstant.split(delims);
 							
-							// put the constants in a list
-							List<String> newACEConstantList = Arrays.asList(newACEConstants); 
-							
-							System.out.println("DEBUG ParameterDialog.okButton: Creating new ACE name="+newDimension);
-							System.out.println("DEBUG ParameterDialog.okButton: Creating new ACE type="+newACEType);
-							System.out.println("DEBUG ParameterDialog.okButton: Creating new ACE constant list="+newACEConstantList);
-							
-							// create the new expression of type AtomicConstantExpression
-							AtomicConstantExpression newACE = new AtomicConstantExpression()
-																.withConstantType(newACEType)
-																.withConstant(newACEConstantList);
-							
-							System.out.println("DEBUG DEBUG ParameterDialog.okButton: Adding new expression to mapExps");
-							mapExps.put(newDimension,newACE);
-							
-							// signals the model that we have updated the map
-							comboBoxModelExps.actionPerformed(new ActionEvent(okButton,0,"update"));
 					    	
 							
 						} else {	// get the dimension expression
@@ -389,14 +366,31 @@ public class ParameterDialog extends JDialog {
 							
 						} else {
 						
-						
-							// get the type of the dimension
-							//newDimensionType=mapExps.get(newDimension)
+							String newPrecision = null;
 							
-							// get the precision expression, NB: it can be null
-							String newPrecision = (String) comboBoxPrecision.getSelectedItem();
+							if(rdbtnPrecisionField.isSelected()) { // if button for automatic creation of ACE for Precision is selected, create the ACE
+								
+								
+								// get the constant text for the new automatic ACE
+								String newACEConstant = textFieldPrecision.getText();
+								
+								
+								// set the type of the ACE for precision = a real (ex: 0.01)
+								ParameterType newACEType = ParameterType.REAL; 
+								
+								
+								// create an automatic ACE of type integer for Precision
+								newPrecision = createAutomaticACE(newACEConstant, newACEType);
+								
+								
+							} else { 	// get the precision expression, NB: it can be null
+								newPrecision = (String) comboBoxPrecision.getSelectedItem();
 									
-
+							}
+							
+							
+							
+							
 							
 							PDLParameter newParam = null; // will be init just later
 							
@@ -423,6 +417,7 @@ public class ParameterDialog extends JDialog {
 							System.out.println("DEBUG ParameterDialog.okButton: setting unit="+newUnit);
 							System.out.println("DEBUG ParameterDialog.okButton: setting dimension="+newDimension);
 							System.out.println("DEBUG ParameterDialog.okButton: setting precision="+newPrecision);
+							System.out.println("DEBUG ParameterDialog.okButton: setting required="+newRequired);
 							
 							newParam.setType(newType);
 							newParam.setUCD(newUCD);
@@ -431,7 +426,10 @@ public class ParameterDialog extends JDialog {
 							newParam.setUnit(newUnit);
 							newParam.setDimension(newDimension);
 							newParam.setPrecision(newPrecision);
+							newParam.setRequired(newRequired);
 							
+							
+							// remove the param from the map if modifying an existing param
 							switch(dialogMode) {
 							
 								case ParameterDialogModeCreate: // if creating a new param 
@@ -453,21 +451,25 @@ public class ParameterDialog extends JDialog {
 					    	 
 							// select the new expression in the combo box
 							comboBoxParams.setSelectedItem(newName); 
+							
+							
+							dispose(); // close the window (we do that only when the parameter creation has succeeded)
+
 						} // dimension is not null
 						
-					} else {
-						// giving up
-					}
+					} // name not already used
 					
 					
-					
-					
-					dispose(); // close the window
-					
-				} // else	
+				} // else (no name entered)	
 				
-			}
+				
+								
+			} // okButton.actionPerformed
 
+			
+			/**
+			 * get the number of automatic ACEs created
+			 */
 			protected int getInstancesOfAutomaticACE() {
 				int counter=1;
 				for(String expName: mapExps.keySet()) {
@@ -478,6 +480,63 @@ public class ParameterDialog extends JDialog {
 				}
 				return counter;
 			}
+			
+			
+			/**
+			 * create an automatic ACE of type Integer
+			 * @param newACEConstant the integer constant for the ACE
+			 * @return the name of the new ACE or null if cannot be created
+			 */
+			protected String createAutomaticACE(String newACEConstant, ParameterType newACEType) {
+				
+
+				// get the last instance of automatic ACE
+				int counter = getInstancesOfAutomaticACE();
+				
+				// create a new ACE called using the constant provided
+				String newACEName = "_ace"+counter; 
+				
+				
+				// Check that the constant is of the right type by trying to create a new general parameter with it
+				System.out.println("DEBUG ParameterDialog.createAutomaticACE: checking type of constant by creating a GeneralParameter");
+
+				try{
+					GeneralParameter param = new GeneralParameter(newACEConstant, newACEType, "", new GeneralParameterVisitor());
+				}catch(Exception e1){
+					JOptionPane.showMessageDialog(getContentPane(), "Type Error: " + e1.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
+					return null;  // end the method
+				}
+				
+				
+				
+				// parse the string representing a vector
+				String delims = ";";
+				String[] newACEConstants = newACEConstant.split(delims);
+				
+				// put the constants in a list
+				List<String> newACEConstantList = Arrays.asList(newACEConstants); 
+				
+				System.out.println("DEBUG ParameterDialog.createAutomaticACE: Creating new ACE name="+newACEName);
+				System.out.println("DEBUG ParameterDialog.createAutomaticACE: Creating new ACE type="+newACEType);
+				System.out.println("DEBUG ParameterDialog.createAutomaticACE: Creating new ACE constant list="+newACEConstantList);
+				
+				// create the new expression of type AtomicConstantExpression
+				AtomicConstantExpression newACE = new AtomicConstantExpression()
+													.withConstantType(newACEType)
+													.withConstant(newACEConstantList);
+				
+				System.out.println("DEBUG DEBUG ParameterDialog.okButton: Adding new expression to mapExps");
+				mapExps.put(newACEName,newACE);
+				
+				// signals the model that we have updated the map
+				comboBoxModelExps.actionPerformed(new ActionEvent(okButton,0,"update"));
+				
+				return newACEName;
+				
+			}
+			
+			
+			
 		});
 	
 	
