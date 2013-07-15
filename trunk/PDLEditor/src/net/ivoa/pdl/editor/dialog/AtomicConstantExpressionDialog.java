@@ -18,6 +18,9 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JComboBox;
 
+import visitors.GeneralParameterVisitor;
+import CommonsObjects.GeneralParameter;
+
 import net.ivoa.parameter.model.AtomicConstantExpression;
 import net.ivoa.parameter.model.Expression;
 import net.ivoa.parameter.model.Operation;
@@ -218,6 +221,19 @@ public class AtomicConstantExpressionDialog extends JDialog {
 						System.out.println("DEBUG AtomicConstantExpressionDialog.okButton: power="+newPowerExpression);
 						System.out.println("DEBUG AtomicConstantExpressionDialog.okButton: operation="+newOperation);
 							
+						
+						// Check that the constant is of the right type by trying to create a new general parameter with it
+						System.out.println("DEBUG AtomicConstantExpressionDialog.okButton: checking type of constant by creating a GeneralParameter");
+						try{
+							GeneralParameter param = new GeneralParameter(newConstant, newType, "", new GeneralParameterVisitor());
+						}catch(Exception e1){
+							JOptionPane.showMessageDialog(getContentPane(), "Type Error: " + e1.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
+							return;  // end the method
+						}
+						
+						
+						
+						
 						
 						// create the new expression of type AtomicConstantExpression
 						AtomicConstantExpression newExp = new AtomicConstantExpression()

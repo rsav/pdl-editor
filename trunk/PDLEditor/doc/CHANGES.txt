@@ -1,43 +1,22 @@
-Notes de Carlo au 01/07/2013
--> In the interface for creating a new parameter, add a radio button for choosing if the SingleParameter is
-optional or required.
-
-For this, I've changed the PDLParameter Class (by introducing the "required" Boolean 
-attribute, with related getter and setter) and the ParameterWrapper which produce the PDL XML description.
-
-
+TODO and CHANGES
 
 TODO
-- dans module Expression, rajouter la valeur de l'expression
 
-- new Parameter Expression and Modify 
-  - for Dimension and Precision; allow integer and upon clicking OK creates the ACE 
-    with automatic naming even if constant with same value already exists.
-    In this case the ACE type is INTEGER and no power, operation, operand
-    Implem with radio buttons:
-    Dimension : [ ] menu
-                [ ] champ (entier)
-    Possibility to use GeneralParameter creation to check the validity: cf test.java
+*** - When deleting the last expression, the panel on the right of the expression module should be empty
 
+CHANGES
 
-- idem for precision: create an ACE of type REAL vs INTEGER for dimension
-
-     
-- Service module; 
-  - service ID will be a URL, make field larger to right of box 
-
-
-- When deleting the last expression, the panel on the right of the expression module should be empty
-
-
-- New ACE: check that constant is of type selected (use GeneralParameter trick)
-
-
-
-
-v0.8 
+v0.9 2013-07-15 
+- In Service Module, made service ID field because the field will be filled in with a URL
+- In Parameter Module
+	- new/edit parameter, precision: a REAL constant can be entered to create a new ACE
+	- a req checkbox added to display the  required status of the selected param
+	- new/edit parameter: a required checkbox added 
+- In Expression Module, new/edit parameter: check that the ACE constant is of requested type by trying to create a GeneralParameter with it
+	
+v0.8 2013-06-??
 - checks before exporting to XML
-- Parameter Module, new parameter, dimension and precision: radio buttons to select menu or field to enter constant of new ACE
+- Parameter Module, new parameter, dimension: radio buttons to select menu or field to enter integer constant of new ACE
 
 
 v0.7 2013-06-03 
