@@ -209,7 +209,7 @@ public class ParameterDialog extends JDialog {
 		contentPanel.add(textFieldDimension);
 		textFieldDimension.setColumns(10);
 		
-		JRadioButton rdbtnPrecisionMenu = new JRadioButton("");
+		final JRadioButton rdbtnPrecisionMenu = new JRadioButton("");
 		rdbtnPrecisionMenu.setBounds(305, 152, 28, 23);
 		rdbtnPrecisionMenu.setSelected(true);
 		contentPanel.add(rdbtnPrecisionMenu);
@@ -379,7 +379,7 @@ public class ParameterDialog extends JDialog {
 								ParameterType newACEType = ParameterType.REAL; 
 								
 								
-								// create an automatic ACE of type integer for Precision
+								// create an automatic ACE of type integer for Precision - this method returns null if there is a type error
 								newPrecision = createAutomaticACE(newACEConstant, newACEType);
 								
 								
@@ -388,73 +388,77 @@ public class ParameterDialog extends JDialog {
 									
 							}
 							
+							// if radio button for precision is selected we don't care if it's null
+							// else, the entered precision must not be null
+							if(rdbtnPrecisionMenu.isSelected() || newPrecision!=null) {
 							
-							
-							
-							
-							PDLParameter newParam = null; // will be init just later
-							
-							switch(dialogMode) {
-							
-								case ParameterDialogModeCreate: // if creating a new param 
-									System.out.println("DEBUG ParameterDialog.okButton: Creating new Parameter name="+newName);
-									newParam = new PDLParameter();
-									break;
-									
-								case ParameterDialogModeModify: // if modifying an existing param
-									System.out.println("DEBUG ParameterDialog.okButton: Modifying parameter old name="+oldName);
-									newParam = mapParams.get(oldName); // get the old param
-									break;
-							}
-							
-							// set the attribute of the new/existing param
-							
-							
-							System.out.println("DEBUG ParameterDialog.okButton: setting type="+newType);
-							System.out.println("DEBUG ParameterDialog.okButton: setting ucd="+newUCD);
-							System.out.println("DEBUG ParameterDialog.okButton: setting utype="+newUType);
-							System.out.println("DEBUG ParameterDialog.okButton: setting skoss="+newSkoss);
-							System.out.println("DEBUG ParameterDialog.okButton: setting unit="+newUnit);
-							System.out.println("DEBUG ParameterDialog.okButton: setting dimension="+newDimension);
-							System.out.println("DEBUG ParameterDialog.okButton: setting precision="+newPrecision);
-							System.out.println("DEBUG ParameterDialog.okButton: setting required="+newRequired);
-							
-							newParam.setType(newType);
-							newParam.setUCD(newUCD);
-							newParam.setUType(newUType);
-							newParam.setSkoss(newSkoss);
-							newParam.setUnit(newUnit);
-							newParam.setDimension(newDimension);
-							newParam.setPrecision(newPrecision);
-							newParam.setRequired(newRequired);
-							
-							
-							// remove the param from the map if modifying an existing param
-							switch(dialogMode) {
-							
-								case ParameterDialogModeCreate: // if creating a new param 
 								
-									break;
+								
+								PDLParameter newParam = null; // will be init just later
+								
+								switch(dialogMode) {
+								
+									case ParameterDialogModeCreate: // if creating a new param 
+										System.out.println("DEBUG ParameterDialog.okButton: Creating new Parameter name="+newName);
+										newParam = new PDLParameter();
+										break;
+										
+									case ParameterDialogModeModify: // if modifying an existing param
+										System.out.println("DEBUG ParameterDialog.okButton: Modifying parameter old name="+oldName);
+										newParam = mapParams.get(oldName); // get the old param
+										break;
+								}
+								
+								// set the attribute of the new/existing param
+								
+								
+								System.out.println("DEBUG ParameterDialog.okButton: setting type="+newType);
+								System.out.println("DEBUG ParameterDialog.okButton: setting ucd="+newUCD);
+								System.out.println("DEBUG ParameterDialog.okButton: setting utype="+newUType);
+								System.out.println("DEBUG ParameterDialog.okButton: setting skoss="+newSkoss);
+								System.out.println("DEBUG ParameterDialog.okButton: setting unit="+newUnit);
+								System.out.println("DEBUG ParameterDialog.okButton: setting dimension="+newDimension);
+								System.out.println("DEBUG ParameterDialog.okButton: setting precision="+newPrecision);
+								System.out.println("DEBUG ParameterDialog.okButton: setting required="+newRequired);
+								
+								newParam.setType(newType);
+								newParam.setUCD(newUCD);
+								newParam.setUType(newUType);
+								newParam.setSkoss(newSkoss);
+								newParam.setUnit(newUnit);
+								newParam.setDimension(newDimension);
+								newParam.setPrecision(newPrecision);
+								newParam.setRequired(newRequired);
+								
+								
+								// remove the param from the map if modifying an existing param
+								switch(dialogMode) {
+								
+									case ParameterDialogModeCreate: // if creating a new param 
 									
-								case ParameterDialogModeModify: // if modifying an existing param
-									
-									mapParams.remove(comboBoxParams.getSelectedItem()); // remove the param from the map
-									break;
-							}	
-							
-							
-							// add the new or modified param to the map with its new/modified name
-							mapParams.put(newName, newParam);
-	
-							// signals the model that we have updated the map
-							comboBoxModelParams.actionPerformed(new ActionEvent(okButton,0,"update"));
-					    	 
-							// select the new expression in the combo box
-							comboBoxParams.setSelectedItem(newName); 
-							
-							
-							dispose(); // close the window (we do that only when the parameter creation has succeeded)
+										break;
+										
+									case ParameterDialogModeModify: // if modifying an existing param
+										
+										mapParams.remove(comboBoxParams.getSelectedItem()); // remove the param from the map
+										break;
+								}	
+								
+								
+								// add the new or modified param to the map with its new/modified name
+								mapParams.put(newName, newParam);
+		
+								// signals the model that we have updated the map
+								comboBoxModelParams.actionPerformed(new ActionEvent(okButton,0,"update"));
+						    	 
+								// select the new expression in the combo box
+								comboBoxParams.setSelectedItem(newName); 
+								
+								
+								dispose(); // close the window (we do that only when the parameter creation has succeeded)
 
+							} // if newPrecision is not null
+							
 						} // dimension is not null
 						
 					} // name not already used

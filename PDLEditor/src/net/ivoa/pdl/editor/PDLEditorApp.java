@@ -82,7 +82,7 @@ import javax.swing.JCheckBox;
 
 public class PDLEditorApp {
 
-	static String appVersion = "0.7";
+	static String appVersion = "0.91";
 	static String appName = "PDL Editor";
 	static String[] appAuthors = { "Renaud Savalle (Paris Observatory)",
 			"Carlo Maria Zwolf (Paris Observatory)" };
@@ -149,6 +149,7 @@ public class PDLEditorApp {
 	private TreeMap<String, PDLCriterion> mapCrits;
 	private JPanel panelExpsProperties;
 	private JCheckBox checkboxParamReq;
+	private boolean debugCreateParams = false; // true to create debug params
 
 	/**
 	 * Launch the application.
@@ -1011,32 +1012,37 @@ public class PDLEditorApp {
 
 		mapParams = new TreeMap<String, PDLParameter>();
 
-		// add a dummy param for testing
-		System.out.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam1");
-		PDLParameter testParam1 = new PDLParameter();
-		testParam1.setType(ParameterType.INTEGER);
-		testParam1.setUCD("ucd1");
-		testParam1.setUType("utype1");
-		testParam1.setUnit("unit1");
-		testParam1.setSkoss("skoss1");
-		testParam1.setPrecision("_one");
-		testParam1.setDimension("_one");
-		testParam1.setRequired(false);
-		mapParams.put("TP1", testParam1);
+		if(debugCreateParams) {
+			
+			
+			// add a dummy param for testing
+			System.out.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam1");
+			PDLParameter testParam1 = new PDLParameter();
+			testParam1.setType(ParameterType.INTEGER);
+			testParam1.setUCD("ucd1");
+			testParam1.setUType("utype1");
+			testParam1.setUnit("unit1");
+			testParam1.setSkoss("skoss1");
+			testParam1.setPrecision("_one");
+			testParam1.setDimension("_one");
+			testParam1.setRequired(false);
+			mapParams.put("TP1", testParam1);
+	
+			// add a dummy param for testing
+			System.out.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam2");
+			PDLParameter testParam2 = new PDLParameter();
+			testParam2.setType(ParameterType.REAL);
+			testParam2.setUCD("ucd2");
+			testParam2.setUType("utype2");
+			testParam2.setUnit("unit2");
+			testParam2.setSkoss("skoss2");
+			testParam2.setPrecision("_one");
+			testParam2.setDimension("_one");
+			testParam2.setRequired(true);
+			mapParams.put("TP2", testParam2);
 
-		// add a dummy param for testing
-		System.out.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam2");
-		PDLParameter testParam2 = new PDLParameter();
-		testParam2.setType(ParameterType.REAL);
-		testParam2.setUCD("ucd2");
-		testParam2.setUType("utype2");
-		testParam2.setUnit("unit2");
-		testParam2.setSkoss("skoss2");
-		testParam2.setPrecision("_one");
-		testParam2.setDimension("_one");
-		testParam2.setRequired(true);
-		mapParams.put("TP2", testParam2);
-
+		}
+			
 		comboBoxModelParams = new MapComboBoxModel(mapParams);
 		comboBoxParams = new JComboBox(comboBoxModelParams);
 		comboBoxParams.setSelectedIndex(-1); // no selected item at first
@@ -1373,22 +1379,26 @@ public class PDLEditorApp {
 															// selection in tree
 		treeGroups.setShowsRootHandles(true); // ?
 
-		// for debug
-		PDLGroup testGroup1 = new PDLGroup("TG1");
-		testGroup1.addPDLParam("TP1");
-		DefaultMutableTreeNode testNode1 = new DefaultMutableTreeNode(
-				testGroup1);
-		treeModelGroups.insertNodeInto(testNode1,
-				(MutableTreeNode) treeModelGroups.getRoot(), 0);
+		
+		if(debugCreateParams) {
+			// for debug
+			PDLGroup testGroup1 = new PDLGroup("TG1");
+			testGroup1.addPDLParam("TP1");
+			DefaultMutableTreeNode testNode1 = new DefaultMutableTreeNode(
+					testGroup1);
+			treeModelGroups.insertNodeInto(testNode1,
+					(MutableTreeNode) treeModelGroups.getRoot(), 0);
+	
+			// for debug
+			PDLGroup testGroup2 = new PDLGroup("TG2");
+			testGroup2.addPDLParam("TP2");
+			DefaultMutableTreeNode testNode2 = new DefaultMutableTreeNode(
+					testGroup2);
+			treeModelGroups.insertNodeInto(testNode2,
+					(MutableTreeNode) treeModelGroups.getRoot(), 1);
 
-		// for debug
-		PDLGroup testGroup2 = new PDLGroup("TG2");
-		testGroup2.addPDLParam("TP2");
-		DefaultMutableTreeNode testNode2 = new DefaultMutableTreeNode(
-				testGroup2);
-		treeModelGroups.insertNodeInto(testNode2,
-				(MutableTreeNode) treeModelGroups.getRoot(), 1);
-
+		}	
+			
 		scrollPaneGroups.setViewportView(treeGroups);
 
 		JLabel lblParameterGroupsModule = new JLabel("Parameter Groups Module");
@@ -1619,30 +1629,35 @@ public class PDLEditorApp {
 		splitPaneExps.setLeftComponent(panelExpsMenu);
 		panelExpsMenu.setLayout(new GridLayout(0, 1, 0, 0));
 
-		// create a constant for creating expressions
-		List<String> constantValues1 = new ArrayList<String>();
-		constantValues1.add("1");
-		AtomicConstantExpression oneExp = new AtomicConstantExpression()
-				.withConstant(constantValues1).withConstantType(
-						ParameterType.INTEGER);
-		mapExps.put("_one", oneExp);
+		
+		
+		if(debugCreateParams) {
+			// create a constant for creating expressions
+			List<String> constantValues1 = new ArrayList<String>();
+			constantValues1.add("1");
+			AtomicConstantExpression oneExp = new AtomicConstantExpression()
+					.withConstant(constantValues1).withConstantType(
+							ParameterType.INTEGER);
+			mapExps.put("_one", oneExp);
+	
+			// add a dummy expression for testing
+			List<String> constantValues2 = new ArrayList<String>();
+			constantValues2.add("1.0");		
+			AtomicConstantExpression testExp1 = new AtomicConstantExpression()
+					.withConstant(constantValues2).withConstantType(
+							ParameterType.REAL);
+			mapExps.put("TE1", testExp1);
+	
+			// add a dummy expression for testing
+			List<String> constantValues3 = new ArrayList<String>();
+			constantValues3.add("2.0");
+			AtomicConstantExpression testExp2 = new AtomicConstantExpression()
+					.withConstant(constantValues3).withConstantType(
+							ParameterType.REAL);
+			mapExps.put("TE2", testExp2);
 
-		// add a dummy expression for testing
-		List<String> constantValues2 = new ArrayList<String>();
-		constantValues2.add("1.0");		
-		AtomicConstantExpression testExp1 = new AtomicConstantExpression()
-				.withConstant(constantValues2).withConstantType(
-						ParameterType.REAL);
-		mapExps.put("TE1", testExp1);
-
-		// add a dummy expression for testing
-		List<String> constantValues3 = new ArrayList<String>();
-		constantValues3.add("2.0");
-		AtomicConstantExpression testExp2 = new AtomicConstantExpression()
-				.withConstant(constantValues3).withConstantType(
-						ParameterType.REAL);
-		mapExps.put("TE2", testExp2);
-
+		}
+			
 		comboBoxModelExps = new MapComboBoxModel(mapExps);
 
 		comboBoxExps = new JComboBox(comboBoxModelExps);
@@ -2152,21 +2167,23 @@ public class PDLEditorApp {
 
 		mapCrits = new TreeMap<String, PDLCriterion>();
 
-		// create dummy criterion for debug
-		PDLCriterion testCrit1 = new PDLCriterion();
-		testCrit1.setCExp("TE1");
-		testCrit1.setType("ValueSmallerThan");
-		testCrit1.addExp("TE2");
-
-		mapCrits.put("TC1", testCrit1);
-
-		// create dummy criterion for debug
-		PDLCriterion testCrit2 = new PDLCriterion();
-		testCrit2.setCExp("TE2");
-		testCrit2.setType("IsNull");
-
-		mapCrits.put("TC2", testCrit2);
-
+		if(debugCreateParams) {
+			// create dummy criterion for debug
+			PDLCriterion testCrit1 = new PDLCriterion();
+			testCrit1.setCExp("TE1");
+			testCrit1.setType("ValueSmallerThan");
+			testCrit1.addExp("TE2");
+	
+			mapCrits.put("TC1", testCrit1);
+	
+			// create dummy criterion for debug
+			PDLCriterion testCrit2 = new PDLCriterion();
+			testCrit2.setCExp("TE2");
+			testCrit2.setType("IsNull");
+	
+			mapCrits.put("TC2", testCrit2);
+		}
+			
 		listModelCrits = new MapListModel(mapCrits);
 
 		listCrits = new JList(listModelCrits);
@@ -2296,14 +2313,17 @@ public class PDLEditorApp {
 
 		mapStats = new TreeMap<String, PDLStatement>();
 
-		PDLStatement testStat1 = new PDLStatement();
-		testStat1.setType("IfThen");
-		testStat1.setCrit1("TC1");
-		testStat1.setCrit2("TC2");
-		testStat1.setGroup("TG1");
-
-		mapStats.put("TS1", testStat1);
-
+		
+		if(debugCreateParams) {
+			PDLStatement testStat1 = new PDLStatement();
+			testStat1.setType("IfThen");
+			testStat1.setCrit1("TC1");
+			testStat1.setCrit2("TC2");
+			testStat1.setGroup("TG1");
+		
+			mapStats.put("TS1", testStat1);
+		}
+			
 		listModelStats = new MapListModel(mapStats);
 		listStats = new JList(listModelStats);
 		scrollPaneStats.setViewportView(listStats);
