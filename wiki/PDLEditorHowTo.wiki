@@ -9,5 +9,6 @@ You can download the executable jar file from this link: PUT URL
 
 =Run it=
 Be sure you have installed Java on your computer.
-*Double click on the jar file. The Editor will run immediately.
-*In a console type "java -jar PDLEditorApp.jar"
+
+Double click on the jar file. The Editor will run immediately. Or
+In a console type "java -jar PDLEditorApp.jar"
