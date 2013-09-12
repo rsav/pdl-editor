@@ -280,7 +280,11 @@ public class CriterionDialog extends JDialog {
 							
 							// add the selected connected criterion
 							String newConCrit=(String) comboBoxCrits.getSelectedItem(); // "" or the name of an existing criterion
-							if(newConCrit.isEmpty()) {
+							
+							System.out.println("DEBUG newConCrit="+newConCrit);
+							
+							
+							if(newConCrit==null || newConCrit.isEmpty()) {
 								newConCrit=null;
 							}
 							

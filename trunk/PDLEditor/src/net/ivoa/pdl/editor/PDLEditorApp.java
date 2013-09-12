@@ -82,7 +82,7 @@ import javax.swing.JCheckBox;
 
 public class PDLEditorApp {
 
-	static String appVersion = "0.91";
+	static String appVersion = "0.92";
 	static String appName = "PDL Editor";
 	static String[] appAuthors = { "Renaud Savalle (Paris Observatory)",
 			"Carlo Maria Zwolf (Paris Observatory)" };
@@ -252,7 +252,8 @@ public class PDLEditorApp {
 				
 				
 				
-				JFileChooser chooser = new JFileChooser("/tmp");
+
+				JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
 				FileNameExtensionFilter filter = new FileNameExtensionFilter(
 						"PDL XML files", "xml"); 
 				chooser.setFileFilter(filter);
@@ -325,7 +326,7 @@ public class PDLEditorApp {
 
 		try {
 
-			JFileChooser chooser = new JFileChooser("/tmp");
+			JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
 			FileNameExtensionFilter filter = new FileNameExtensionFilter(
 					"PDL files", "pdl");// per Carlo, not neodatis
 			chooser.setFileFilter(filter);
@@ -491,7 +492,7 @@ public class PDLEditorApp {
 
 		try {
 
-			JFileChooser chooser = new JFileChooser("/tmp");
+			JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
 			FileNameExtensionFilter filter = new FileNameExtensionFilter(
 					"PDL files", "pdl"); // per Carlo, not neodatis
 			chooser.setFileFilter(filter);
@@ -1950,9 +1951,17 @@ public class PDLEditorApp {
 						
 						if(expOperation!=null) {
 							operation = expOperation.getOperationType().toString();
-							AtomicConstantExpression expOperand = (AtomicConstantExpression) expOperation.getExpression();
+							Expression expOperand = (Expression) expOperation.getExpression();
+							
+							String expOperandName=new String("");
 							if(expOperand!=null) {
-								operand = Utilities.getInstance().expressionConstantToString(expOperand.getConstant());
+								for(Entry<String,Expression> entry : mapExps.entrySet()) {
+									if(entry.getValue().equals(expOperand)) {
+										expOperandName=entry.getKey();
+									}
+								}
+								
+								operand = expOperandName;
 							}
 						}
 						textFieldExpOperation.setText(operation);
