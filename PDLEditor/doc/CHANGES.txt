@@ -2,13 +2,21 @@ TODO and CHANGES
 
 TODO
 
+*** Linux: UIManager.setLookAndFeel(lookAndFeel); cf http://docs.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html#example
+
 *** - When deleting the last expression, the panel on the right of the expression module should be empty
 
 CHANGES
 
+v0.92 2013-09-12 
+- corrected bug in PDLEditorApp.java l 1954 where operand name was not correctly set when displaying an APE
+- corrected bug in CriterionDialog.java l 287 where condition newConCrit==null was not checked correctly
+- this version works with the scenario "broadening"
+
 v0.91 2013-07-18
 - Test params are not created by default
 - solved bug in control flow of creation of new param
+- default dir for load/save is System.getProperty("user.home")
 
 v0.9 2013-07-15 
 - In Service Module, made service ID field because the field will be filled in with a URL
