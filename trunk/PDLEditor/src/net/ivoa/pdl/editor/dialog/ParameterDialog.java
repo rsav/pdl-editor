@@ -37,7 +37,7 @@ public class ParameterDialog extends JDialog {
 	private JTextField textFieldName;
 	private JTextField textFieldUCD;
 	private JTextField textFieldUType;
-	private JTextField textFieldSkoss;
+	private JTextField textFieldSkos;
 	private JTextField textFieldUnit;
 	
 	private MapComboBoxModel comboBoxModelDimension;
@@ -149,14 +149,14 @@ public class ParameterDialog extends JDialog {
 		contentPanel.add(textFieldUType);
 		textFieldUType.setColumns(10);
 		
-		JLabel lblSkoss = new JLabel("SkossConcept:");
-		lblSkoss.setBounds(212, 34, 101, 16);
-		contentPanel.add(lblSkoss);
+		JLabel lblSkos = new JLabel("SkosConcept:");
+		lblSkos.setBounds(212, 34, 101, 16);
+		contentPanel.add(lblSkos);
 		
-		textFieldSkoss = new JTextField();
-		textFieldSkoss.setBounds(312, 28, 134, 28);
-		contentPanel.add(textFieldSkoss);
-		textFieldSkoss.setColumns(10);
+		textFieldSkos = new JTextField();
+		textFieldSkos.setBounds(312, 28, 134, 28);
+		contentPanel.add(textFieldSkos);
+		textFieldSkos.setColumns(10);
 		
 		JLabel lblUnit = new JLabel("Unit:");
 		lblUnit.setBounds(212, 66, 61, 16);
@@ -243,7 +243,7 @@ public class ParameterDialog extends JDialog {
 			comboBoxType.setSelectedItem(selParam.getType());
 			textFieldUCD.setText(selParam.getUCD());
 			textFieldUType.setText(selParam.getUType());
-			textFieldSkoss.setText(selParam.getSkoss());
+			textFieldSkos.setText(selParam.getSkos());
 			textFieldUnit.setText(selParam.getUnit());
 			
 			comboBoxDimension.setSelectedItem(selParam.getDimension());
@@ -329,8 +329,8 @@ public class ParameterDialog extends JDialog {
 						// get the Utype typed by user
 						String newUType = textFieldUType.getText();
 						
-						// get the skoss
-						String newSkoss = textFieldSkoss.getText();
+						// get the skos
+						String newSkos = textFieldSkos.getText();
 						
 						// get the new unit
 						String newUnit = textFieldUnit.getText();
@@ -415,7 +415,7 @@ public class ParameterDialog extends JDialog {
 								System.out.println("DEBUG ParameterDialog.okButton: setting type="+newType);
 								System.out.println("DEBUG ParameterDialog.okButton: setting ucd="+newUCD);
 								System.out.println("DEBUG ParameterDialog.okButton: setting utype="+newUType);
-								System.out.println("DEBUG ParameterDialog.okButton: setting skoss="+newSkoss);
+								System.out.println("DEBUG ParameterDialog.okButton: setting skos="+newSkos);
 								System.out.println("DEBUG ParameterDialog.okButton: setting unit="+newUnit);
 								System.out.println("DEBUG ParameterDialog.okButton: setting dimension="+newDimension);
 								System.out.println("DEBUG ParameterDialog.okButton: setting precision="+newPrecision);
@@ -424,7 +424,7 @@ public class ParameterDialog extends JDialog {
 								newParam.setType(newType);
 								newParam.setUCD(newUCD);
 								newParam.setUType(newUType);
-								newParam.setSkoss(newSkoss);
+								newParam.setSkos(newSkos);
 								newParam.setUnit(newUnit);
 								newParam.setDimension(newDimension);
 								newParam.setPrecision(newPrecision);

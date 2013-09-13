@@ -25,7 +25,7 @@ public class ParameterWrapper {
 		toReturn.setParameterType(param.getType());
 		toReturn.setDimension(expressionsInProject.get(param.getDimension()));
 		toReturn.setPrecision(expressionsInProject.get(param.getPrecision()));
-		toReturn.setSkossConcept(param.getSkoss());
+		toReturn.setSkossConcept(param.getSkos());
 		toReturn.setUCD(param.getUCD());
 		toReturn.setUnit(param.getUnit());
 		toReturn.setUType(param.getUType());

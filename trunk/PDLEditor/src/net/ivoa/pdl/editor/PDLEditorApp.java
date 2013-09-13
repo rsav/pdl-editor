@@ -7,6 +7,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -78,11 +79,13 @@ import net.ivoa.pdl.editor.guiComponent.MapListModel;
 import org.neodatis.odb.ODB;
 import org.neodatis.odb.ODBFactory;
 import org.neodatis.odb.Objects;
+
 import javax.swing.JCheckBox;
+import javax.swing.JScrollBar;
 
 public class PDLEditorApp {
 
-	static String appVersion = "0.92";
+	static String appVersion = "0.93";
 	static String appName = "PDL Editor";
 	static String[] appAuthors = { "Renaud Savalle (Paris Observatory)",
 			"Carlo Maria Zwolf (Paris Observatory)" };
@@ -93,7 +96,7 @@ public class PDLEditorApp {
 	private JTextField textFieldParamUCD;
 	private JTextField textFieldParamUType;
 
-	private JTextField textFieldParamSkoss;
+	private JTextField textFieldParamSkos;
 	private JTextField textFieldParamUnit;
 
 	private MapComboBoxModel comboBoxModelParams; // to store the params
@@ -156,316 +159,388 @@ public class PDLEditorApp {
 	 */
 	public static void main(String[] args) {
 
+		String inputPDLFileName = null;
+		// process command-line arguments
+		if (args.length == 1) { // assume it's a PDL description file to load
+			inputPDLFileName = args[0];
+			System.out
+					.println("DEBUG main: found argument, set inputPDLFileName="
+							+ inputPDLFileName);
+		}
+
 		// set the name of the application for Mac OS X menu and about box
 		System.setProperty("com.apple.mrj.application.apple.menu.about.name",
 				"PDL Editor");
 
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
+		// make the JMenuBars appear on top of the screen on MacOS X
+		System.setProperty("apple.laf.useScreenMenuBar", "true");
 
-					// make the JMenuBars appear on top of the screen on MacOS X
-					System.setProperty("apple.laf.useScreenMenuBar", "true");
+		PDLEditorApp window = new PDLEditorApp();
+		window.appFrame.setVisible(true);
 
-					PDLEditorApp window = new PDLEditorApp();
-					window.appFrame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+		if (inputPDLFileName != null) {
+			System.out.println("DEBUG main: asking window to load file "
+					+ inputPDLFileName);
+			window.loadAllFromNeodatis(inputPDLFileName);
+		}
+
+		/*
+		 * 
+		 * EventQueue.invokeLater(new Runnable() { public void run() { try {
+		 * 
+		 * // make the JMenuBars appear on top of the screen on MacOS X
+		 * System.setProperty("apple.laf.useScreenMenuBar", "true");
+		 * 
+		 * PDLEditorApp window = new PDLEditorApp();
+		 * window.appFrame.setVisible(true);
+		 * 
+		 * 
+		 * 
+		 * 
+		 * } catch (Exception e) { e.printStackTrace(); } } });
+		 */
+
 	}
 
-	
 	/**
 	 * export the description into a XML PDL file
 	 */
-	
+
 	protected void exportToXML() {
-		
-		
+
 		try {
 
-			
-				// get the service id, name and description
-				String serviceID = textFieldServiceID.getText();
-				String serviceName = textFieldServiceName.getText();
-				String serviceDesc = textAreaServiceDesc.getText();
-				
-				// check that the service id is set
-				if(serviceID==null||serviceID.equals(new String(""))) {
-					JOptionPane.showMessageDialog(appFrame,"Field Service ID is not filled in. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				
-				// check that the service name is set
-				if(serviceName==null||serviceName.equals(new String(""))) {
-					JOptionPane.showMessageDialog(appFrame,"Field Service Name is not filled in. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				
-				// check that the service description is set
-				if(serviceDesc==null||serviceDesc.equals(new String(""))) {
-					JOptionPane.showMessageDialog(appFrame,"Field Service Description is not filled in. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
-					return;
-				}				
-				
-				// get the PDL group name for inputs and output
-				String inputsGroupName = (String) comboBoxModelServiceInputs.getSelectedItem(); // NB: can be null or "" if previously set to a valid choice
-				String outputsGroupName = (String) comboBoxModelServiceOutputs.getSelectedItem(); // idem 
-				
-			
-				
-				// check that there is a group selected for input and get PDL group corresponding to inputsGroupName 
-				PDLGroup inputsGroup;
+			// get the service id, name and description
+			String serviceID = textFieldServiceID.getText();
+			String serviceName = textFieldServiceName.getText();
+			String serviceDesc = textAreaServiceDesc.getText();
 
-				System.out.println("DEBUG inputsGroupName="+inputsGroupName);
-				
-				if(inputsGroupName==null||inputsGroupName.equals(new String(""))) { 
-					JOptionPane.showMessageDialog(appFrame,"No group selected for inputs. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
-					return;
-				} else {
-					inputsGroup = getGroupByName((DefaultMutableTreeNode) treeModelGroups.getRoot(),inputsGroupName);
-					System.out.println("DEBUG PDLEditorApp.exportToXML: found input group="+inputsGroup);
-				}
-				
-				// check there is a group selected for output and get PDL group corresponding to inputsGroupName 
-				PDLGroup outputsGroup;
-
-				System.out.println("DEBUG outputsGroupName="+outputsGroupName);
-								
-				if(outputsGroupName==null||outputsGroupName.equals(new String(""))) {
-					JOptionPane.showMessageDialog(appFrame,"No group selected for outputs. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
-					return;
-				} else {
-					outputsGroup = getGroupByName((DefaultMutableTreeNode) treeModelGroups.getRoot(),outputsGroupName);
-					System.out.println("DEBUG PDLEditorApp.exportToXML: found input group="+outputsGroup);
-				}
-			
-				// check that the groups selected for input and output are not the same
-				if(inputsGroupName.equals(outputsGroupName)) {
-					JOptionPane.showMessageDialog(appFrame,"Inputs group and outputs group are the same. Cannot export","Error",JOptionPane.ERROR_MESSAGE);
-					return;	
-				}
-				
-
-				
-				
-				
-
-				JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
-				FileNameExtensionFilter filter = new FileNameExtensionFilter(
-						"PDL XML files", "xml"); 
-				chooser.setFileFilter(filter);
-				int returnVal = chooser.showSaveDialog(appFrame);
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-
-					String fileName = chooser.getSelectedFile().getPath();
-
-					System.out
-							.println("DEBUG PDLEditorApp.exportToXML: Opening file "
-									+ fileName);
-
-					File file = new File(fileName);
-					if (file.exists()) {
-						if (!file.delete()) {
-							System.err.println("ERROR deleting file " + fileName);
-						} else {
-							System.out
-									.println("DEBUG PDLEditorApp.exportToXML: file "
-											+ fileName + " deleted OK");
-						}
-
-					}
-				
-					// Create the object svc
-					PDLService svc = new PDLService(serviceID);
-					svc.setName(serviceName);
-					svc.setDescription(serviceDesc);
-					svc.setInputsGroup(inputsGroupName);
-					svc.setOutputsGroup(outputsGroupName);
-					svc.setParameters(mapParams);
-					svc.setGroups(treeModelGroups);
-					svc.setExpressions(mapExps);
-					svc.setCriterions(mapCrits);
-					svc.setStatements(mapStats);
-					
-					
-					// Serialize the object svc into the XML file
-					ServiceWrapper.getInstance().serializeToXML(svc
-						,inputsGroup
-						,outputsGroup
-						,mapStats ,mapParams ,mapExps ,mapCrits,treeModelGroups 
-						,fileName);
-				
-				
-			
-			
+			// check that the service id is set
+			if (serviceID == null || serviceID.equals(new String(""))) {
+				JOptionPane.showMessageDialog(appFrame,
+						"Field Service ID is not filled in. Cannot export",
+						"Error", JOptionPane.ERROR_MESSAGE);
+				return;
 			}
-			
-			
+
+			// check that the service name is set
+			if (serviceName == null || serviceName.equals(new String(""))) {
+				JOptionPane.showMessageDialog(appFrame,
+						"Field Service Name is not filled in. Cannot export",
+						"Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
+			// check that the service description is set
+			if (serviceDesc == null || serviceDesc.equals(new String(""))) {
+				JOptionPane
+						.showMessageDialog(
+								appFrame,
+								"Field Service Description is not filled in. Cannot export",
+								"Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
+			// get the PDL group name for inputs and output
+			String inputsGroupName = (String) comboBoxModelServiceInputs
+					.getSelectedItem(); // NB: can be null or "" if previously
+										// set to a valid choice
+			String outputsGroupName = (String) comboBoxModelServiceOutputs
+					.getSelectedItem(); // idem
+
+			// check that there is a group selected for input and get PDL group
+			// corresponding to inputsGroupName
+			PDLGroup inputsGroup;
+
+			System.out.println("DEBUG inputsGroupName=" + inputsGroupName);
+
+			if (inputsGroupName == null
+					|| inputsGroupName.equals(new String(""))) {
+				JOptionPane.showMessageDialog(appFrame,
+						"No group selected for inputs. Cannot export", "Error",
+						JOptionPane.ERROR_MESSAGE);
+				return;
+			} else {
+				inputsGroup = getGroupByName(
+						(DefaultMutableTreeNode) treeModelGroups.getRoot(),
+						inputsGroupName);
+				System.out
+						.println("DEBUG PDLEditorApp.exportToXML: found input group="
+								+ inputsGroup);
+			}
+
+			// check there is a group selected for output and get PDL group
+			// corresponding to inputsGroupName
+			PDLGroup outputsGroup;
+
+			System.out.println("DEBUG outputsGroupName=" + outputsGroupName);
+
+			if (outputsGroupName == null
+					|| outputsGroupName.equals(new String(""))) {
+				JOptionPane.showMessageDialog(appFrame,
+						"No group selected for outputs. Cannot export",
+						"Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			} else {
+				outputsGroup = getGroupByName(
+						(DefaultMutableTreeNode) treeModelGroups.getRoot(),
+						outputsGroupName);
+				System.out
+						.println("DEBUG PDLEditorApp.exportToXML: found input group="
+								+ outputsGroup);
+			}
+
+			// check that the groups selected for input and output are not the
+			// same
+			if (inputsGroupName.equals(outputsGroupName)) {
+				JOptionPane
+						.showMessageDialog(
+								appFrame,
+								"Inputs group and outputs group are the same. Cannot export",
+								"Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
+			JFileChooser chooser = new JFileChooser(
+					System.getProperty("user.home"));
+			FileNameExtensionFilter filter = new FileNameExtensionFilter(
+					"PDL XML files", "xml");
+			chooser.setFileFilter(filter);
+			int returnVal = chooser.showSaveDialog(appFrame);
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+
+				String fileName = chooser.getSelectedFile().getPath();
+
+				System.out
+						.println("DEBUG PDLEditorApp.exportToXML: Opening file "
+								+ fileName);
+
+				File file = new File(fileName);
+				if (file.exists()) {
+					if (!file.delete()) {
+						System.err.println("ERROR deleting file " + fileName);
+					} else {
+						System.out
+								.println("DEBUG PDLEditorApp.exportToXML: file "
+										+ fileName + " deleted OK");
+					}
+
+				}
+
+				// Create the object svc
+				PDLService svc = new PDLService(serviceID);
+				svc.setName(serviceName);
+				svc.setDescription(serviceDesc);
+				svc.setInputsGroup(inputsGroupName);
+				svc.setOutputsGroup(outputsGroupName);
+				svc.setParameters(mapParams);
+				svc.setGroups(treeModelGroups);
+				svc.setExpressions(mapExps);
+				svc.setCriterions(mapCrits);
+				svc.setStatements(mapStats);
+
+				// Serialize the object svc into the XML file
+				ServiceWrapper.getInstance().serializeToXML(svc, inputsGroup,
+						outputsGroup, mapStats, mapParams, mapExps, mapCrits,
+						treeModelGroups, fileName);
+
+			}
+
 		} catch (Exception e) {
 
 			System.err.println("ERROR during export: Caught exception "
 					+ e.getMessage());
 			e.printStackTrace();
 
-		} 
-		
-		
-		
+		}
+
 	}
-	
-	
+
 	/**
 	 * load all the information from a neodatis file
+	 * 
+	 * @param inputPDLFileName
+	 *            if not null, the name of the file to load, if null a dialog
+	 *            will be shown for the user to choose the file
 	 */
-	protected void loadAllFromNeodatis() {
+	protected void loadAllFromNeodatis(String inputPDLFileName) {
 
 		ODB odb = null;
 
 		try {
 
-			JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
-			FileNameExtensionFilter filter = new FileNameExtensionFilter(
-					"PDL files", "pdl");// per Carlo, not neodatis
-			chooser.setFileFilter(filter);
-			int returnVal = chooser.showOpenDialog(appFrame);
-			if (returnVal == JFileChooser.APPROVE_OPTION) {
+			String fileName = null;
 
-				String fileName = chooser.getSelectedFile().getPath();
+			System.out
+					.println("DEBUG PDLEditorApp.loadAllFromNeodatis: got inputPDLFileName="
+							+ inputPDLFileName);
+
+			if (inputPDLFileName == null) {
+
+				JFileChooser chooser = new JFileChooser(
+						System.getProperty("user.home"));
+				FileNameExtensionFilter filter = new FileNameExtensionFilter(
+						"PDL files", "pdl");// per Carlo, not neodatis
+				chooser.setFileFilter(filter);
+				int returnVal = chooser.showOpenDialog(appFrame);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+
+					fileName = chooser.getSelectedFile().getPath();
+
+				}
+			} else {
 
 				System.out
-						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: Opening file "
-								+ fileName);
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: Using passed file "
+								+ inputPDLFileName);
 
-				odb = ODBFactory.open(fileName);
+				fileName = inputPDLFileName;
 
-				Objects<PDLService> objects = odb.getObjects(PDLService.class);
+			}
+
+			// check that file exists
+			File file = new File(fileName);
+			if (!file.exists()) {
 
 				System.out
-						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: found "
-								+ objects.size() + " PDLService(s)");
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: File does not exist ! ");
 
-				if (objects.hasNext()) { // if there is an object of that class,
-											// use it to populate the
-											// application
+				JOptionPane.showMessageDialog(appFrame, "File " + fileName
+						+ " does not exist: cannot load", "Error",
+						JOptionPane.ERROR_MESSAGE);
+				throw new FileNotFoundException();
 
-					PDLService svc = objects.next();
+			}
 
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: restoring PDLService "
-									+ svc);
+			System.out
+					.println("DEBUG PDLEditorApp.loadAllFromNeodatis: Opening file "
+							+ fileName);
 
-					textFieldServiceID.setText(svc.getID());
-					textFieldServiceName.setText(svc.getName());
-					textAreaServiceDesc.setText(svc.getDescription());
+			odb = ODBFactory.open(fileName);
 
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring parameters ");
-					TreeMap<String, PDLParameter> params = svc.getParameters();
-					mapParams.clear();
-					mapParams.putAll(params);
+			Objects<PDLService> objects = odb.getObjects(PDLService.class);
 
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring parameters: signaling comboBoxModelParams");
-					comboBoxModelParams.actionPerformed(new ActionEvent(
-							btnLoadDescription, 0, "update"));
+			System.out.println("DEBUG PDLEditorApp.loadAllFromNeodatis: found "
+					+ objects.size() + " PDLService(s)");
 
-					// do the selection in the combo box of expressions
-					if (mapParams.size() == 0) {
-						comboBoxParams.setSelectedIndex(-1); // do not select
-																// any
-					} else {
-						comboBoxParams.setSelectedIndex(0); // select the first
-															// one
-					}
+			if (objects.hasNext()) { // if there is an object of that class,
+										// use it to populate the
+										// application
 
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring groups ");
-					treeModelGroups = svc.getGroups(); // transform the groups
-														// in neodatis file to a
-														// treemodel and affect
-														// result to the field
-														// variable
-					treeGroups.setModel(treeModelGroups); // replace the tree
-															// model of the
-															// JTree with the
-															// new one
+				PDLService svc = objects.next();
 
-					// add the listener to the treeModelGroups to handle
-					// automatic changes in comboBoxModelServiceInputs and
-					// comboBoxModelServiceOutputs
-					treeModelGroupsListener = new GroupsTreeModelListener(
-							comboBoxModelServiceInputs,
-							comboBoxModelServiceOutputs);
-					treeModelGroups
-							.addTreeModelListener(treeModelGroupsListener);
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: restoring PDLService "
+								+ svc);
 
-					// print the tree
-					printGroupsTree((DefaultMutableTreeNode) treeModelGroups
-							.getRoot());
+				textFieldServiceID.setText(svc.getID());
+				textFieldServiceName.setText(svc.getName());
+				textAreaServiceDesc.setText(svc.getDescription());
 
-					// populate comboBoxModelServiceInputs and
-					// comboBoxModelServiceOutputs
-					initComboBoxService(comboBoxModelServiceInputs,
-							treeModelGroups);
-					initComboBoxService(comboBoxModelServiceOutputs,
-							treeModelGroups);
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring parameters ");
+				TreeMap<String, PDLParameter> params = svc.getParameters();
+				mapParams.clear();
+				mapParams.putAll(params);
 
-					// perform selection in comboBoxModelServiceInputs and
-					// comboBoxModelServiceOutputs
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring inputs group and output groups");
-					comboBoxModelServiceInputs.setSelectedItem(svc
-							.getInputsGroup());
-					comboBoxModelServiceOutputs.setSelectedItem(svc
-							.getOutputsGroup());
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring parameters: signaling comboBoxModelParams");
+				comboBoxModelParams.actionPerformed(new ActionEvent(
+						btnLoadDescription, 0, "update"));
 
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring expressions");
-
-					TreeMap<String, Expression> exps = svc.getExpressions();
-					mapExps.clear();
-					mapExps.putAll(exps);
-
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restored expressions: signaling comboBoxModelExps");
-					comboBoxModelExps.actionPerformed(new ActionEvent(
-							btnLoadDescription, 0, "update"));
-
-					// do the selection in the combo box of expressions
-					if (mapExps.size() == 0) {
-						comboBoxExps.setSelectedIndex(-1); // do not select any
-					} else {
-						comboBoxExps.setSelectedIndex(0); // select the first
-															// one
-					}
-
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring criterions");
-
-					TreeMap<String, PDLCriterion> criterions = svc
-							.getCriterions();
-					mapCrits.clear();
-					mapCrits.putAll(criterions);
-
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restored criterions: signaling listModelCrits");
-					listModelCrits.actionPerformed(new ActionEvent(
-							btnLoadDescription, 0, "update"));
-
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring statements");
-
-					TreeMap<String, PDLStatement> stats = svc.getStatements();
-					mapStats.clear();
-					mapStats.putAll(stats);
-
-					System.out
-							.println("DEBUG PDLEditorApp.loadAllFromNeodatis: restoration done.");
+				// do the selection in the combo box of expressions
+				if (mapParams.size() == 0) {
+					comboBoxParams.setSelectedIndex(-1); // do not select
+															// any
+				} else {
+					comboBoxParams.setSelectedIndex(0); // select the first
+														// one
 				}
 
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring groups ");
+				treeModelGroups = svc.getGroups(); // transform the groups
+													// in neodatis file to a
+													// treemodel and affect
+													// result to the field
+													// variable
+				treeGroups.setModel(treeModelGroups); // replace the tree
+														// model of the
+														// JTree with the
+														// new one
+
+				// add the listener to the treeModelGroups to handle
+				// automatic changes in comboBoxModelServiceInputs and
+				// comboBoxModelServiceOutputs
+				treeModelGroupsListener = new GroupsTreeModelListener(
+						comboBoxModelServiceInputs, comboBoxModelServiceOutputs);
+				treeModelGroups.addTreeModelListener(treeModelGroupsListener);
+
+				// print the tree
+				printGroupsTree((DefaultMutableTreeNode) treeModelGroups
+						.getRoot());
+
+				// populate comboBoxModelServiceInputs and
+				// comboBoxModelServiceOutputs
+				initComboBoxService(comboBoxModelServiceInputs, treeModelGroups);
+				initComboBoxService(comboBoxModelServiceOutputs,
+						treeModelGroups);
+
+				// perform selection in comboBoxModelServiceInputs and
+				// comboBoxModelServiceOutputs
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring inputs group and output groups");
+				comboBoxModelServiceInputs
+						.setSelectedItem(svc.getInputsGroup());
+				comboBoxModelServiceOutputs.setSelectedItem(svc
+						.getOutputsGroup());
+
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring expressions");
+
+				TreeMap<String, Expression> exps = svc.getExpressions();
+				mapExps.clear();
+				mapExps.putAll(exps);
+
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restored expressions: signaling comboBoxModelExps");
+				comboBoxModelExps.actionPerformed(new ActionEvent(
+						btnLoadDescription, 0, "update"));
+
+				// do the selection in the combo box of expressions
+				if (mapExps.size() == 0) {
+					comboBoxExps.setSelectedIndex(-1); // do not select any
+				} else {
+					comboBoxExps.setSelectedIndex(0); // select the first
+														// one
+				}
+
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring criterions");
+
+				TreeMap<String, PDLCriterion> criterions = svc.getCriterions();
+				mapCrits.clear();
+				mapCrits.putAll(criterions);
+
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restored criterions: signaling listModelCrits");
+				listModelCrits.actionPerformed(new ActionEvent(
+						btnLoadDescription, 0, "update"));
+
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restoring statements");
+
+				TreeMap<String, PDLStatement> stats = svc.getStatements();
+				mapStats.clear();
+				mapStats.putAll(stats);
+
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: - restored statements: signaling listModelStats");
+				listModelStats.actionPerformed(new ActionEvent(
+						btnLoadDescription, 0, "update"));
+
+				System.out
+						.println("DEBUG PDLEditorApp.loadAllFromNeodatis: restoration done.");
 			}
 
 		} catch (Exception e) {
@@ -492,7 +567,8 @@ public class PDLEditorApp {
 
 		try {
 
-			JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
+			JFileChooser chooser = new JFileChooser(
+					System.getProperty("user.home"));
 			FileNameExtensionFilter filter = new FileNameExtensionFilter(
 					"PDL files", "pdl"); // per Carlo, not neodatis
 			chooser.setFileFilter(filter);
@@ -732,8 +808,6 @@ public class PDLEditorApp {
 		return list;
 	}
 
-	
-	
 	/**
 	 * get a PDL group by its name in a tree (recursive call)
 	 * 
@@ -750,11 +824,10 @@ public class PDLEditorApp {
 
 		PDLGroup rootGroup = (PDLGroup) root.getUserObject();
 		String groupName = rootGroup.getName();
-		
-		if(groupName.equals(theGroupName)) {
+
+		if (groupName.equals(theGroupName)) {
 			return rootGroup;
 		}
-		
 
 		@SuppressWarnings("rawtypes")
 		Enumeration children = root.children();
@@ -762,15 +835,16 @@ public class PDLEditorApp {
 			while (children.hasMoreElements()) {
 				@SuppressWarnings("unused")
 				PDLGroup g = getGroupByName(
-						(DefaultMutableTreeNode) children.nextElement(), theGroupName);
-				if(g!=null) return g;
+						(DefaultMutableTreeNode) children.nextElement(),
+						theGroupName);
+				if (g != null)
+					return g;
 			}
 		}
 
 		return null; // group was not found
-	}	
-	
-	
+	}
+
 	/**
 	 * get all the PDL groups in a tree (recursive call)
 	 * 
@@ -798,8 +872,8 @@ public class PDLEditorApp {
 		}
 
 		return list;
-	}	
-	
+	}
+
 	/**
 	 * get all the groups names in a tree (recursive call)
 	 * 
@@ -809,8 +883,8 @@ public class PDLEditorApp {
 	 *            list of groups names, to be initialized by caller
 	 * @return list of groups names in the tree
 	 */
-	public static ArrayList<String> getAllGroupsNames(DefaultMutableTreeNode root,
-			ArrayList<String> list) {
+	public static ArrayList<String> getAllGroupsNames(
+			DefaultMutableTreeNode root, ArrayList<String> list) {
 
 		PDLGroup rootGroup = (PDLGroup) root.getUserObject();
 		String rootGroupName = rootGroup.getName();
@@ -834,8 +908,8 @@ public class PDLEditorApp {
 	}
 
 	/**
-	 * get the groups names of the groups which are direct children of the ROOT in a tree (=>
-	 * children at 1st level only)
+	 * get the groups names of the groups which are direct children of the ROOT
+	 * in a tree (=> children at 1st level only)
 	 * 
 	 * @param root
 	 *            root of the tree to search
@@ -843,8 +917,8 @@ public class PDLEditorApp {
 	 *            list of groups, to be initialized by caller
 	 * @return list of groups of the root in the tree
 	 */
-	public static ArrayList<String> getRootGroupsNames(DefaultMutableTreeNode root,
-			ArrayList<String> list) {
+	public static ArrayList<String> getRootGroupsNames(
+			DefaultMutableTreeNode root, ArrayList<String> list) {
 
 		PDLGroup rootGroup = (PDLGroup) root.getUserObject();
 		String rootGroupName = rootGroup.getName();
@@ -965,6 +1039,7 @@ public class PDLEditorApp {
 	 */
 	private void initialize() {
 		appFrame = new JFrame();
+		appFrame.setTitle("PDL Editor");
 		appFrame.setBounds(100, 100, 994, 801);
 		appFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		appFrame.getContentPane().setLayout(null);
@@ -991,6 +1066,41 @@ public class PDLEditorApp {
 
 		menuFile.add(menuItemAbout);
 
+		JMenuItem menuItemLoadAllFromNeodatis = new JMenuItem(
+				"Load PDL Description File");
+
+		menuItemLoadAllFromNeodatis.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				loadAllFromNeodatis(null);
+			}
+
+		});
+
+		menuFile.add(menuItemLoadAllFromNeodatis);
+
+		JMenuItem menuItemSaveAllToNeodatis = new JMenuItem(
+				"Save PDL Description File");
+
+		menuItemSaveAllToNeodatis.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				saveAllToNeodatis();
+			}
+
+		});
+
+		menuFile.add(menuItemSaveAllToNeodatis);
+
+		JMenuItem menuItemExportToXML = new JMenuItem("Export to XML");
+
+		menuItemExportToXML.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				exportToXML();
+			}
+
+		});
+
+		menuFile.add(menuItemExportToXML);
+
 		JMenuItem menuItemQuit = new JMenuItem("Quit");
 		menuItemQuit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -1013,37 +1123,38 @@ public class PDLEditorApp {
 
 		mapParams = new TreeMap<String, PDLParameter>();
 
-		if(debugCreateParams) {
-			
-			
+		if (debugCreateParams) {
+
 			// add a dummy param for testing
-			System.out.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam1");
+			System.out
+					.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam1");
 			PDLParameter testParam1 = new PDLParameter();
 			testParam1.setType(ParameterType.INTEGER);
 			testParam1.setUCD("ucd1");
 			testParam1.setUType("utype1");
 			testParam1.setUnit("unit1");
-			testParam1.setSkoss("skoss1");
+			testParam1.setSkos("skos1");
 			testParam1.setPrecision("_one");
 			testParam1.setDimension("_one");
 			testParam1.setRequired(false);
 			mapParams.put("TP1", testParam1);
-	
+
 			// add a dummy param for testing
-			System.out.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam2");
+			System.out
+					.println("DEBUG PDLEditorApp.initialize: creating dummy parameter testParam2");
 			PDLParameter testParam2 = new PDLParameter();
 			testParam2.setType(ParameterType.REAL);
 			testParam2.setUCD("ucd2");
 			testParam2.setUType("utype2");
 			testParam2.setUnit("unit2");
-			testParam2.setSkoss("skoss2");
+			testParam2.setSkos("skos2");
 			testParam2.setPrecision("_one");
 			testParam2.setDimension("_one");
 			testParam2.setRequired(true);
 			mapParams.put("TP2", testParam2);
 
 		}
-			
+
 		comboBoxModelParams = new MapComboBoxModel(mapParams);
 		comboBoxParams = new JComboBox(comboBoxModelParams);
 		comboBoxParams.setSelectedIndex(-1); // no selected item at first
@@ -1061,8 +1172,6 @@ public class PDLEditorApp {
 							.println("DEBUG: PDLEditorApp.ctor: selParamName="
 									+ selParamName);
 
-					
-					
 					if (selParamName != null) {
 
 						PDLParameter selParam = mapParams.get(selParamName);
@@ -1071,12 +1180,12 @@ public class PDLEditorApp {
 						textFieldParamType.setText(selParam.getType().name());
 						textFieldParamUCD.setText(selParam.getUCD());
 						textFieldParamUType.setText(selParam.getUType());
-						textFieldParamSkoss.setText(selParam.getSkoss());
+						textFieldParamSkos.setText(selParam.getSkos());
 						textFieldParamUnit.setText(selParam.getUnit());
 						textFieldParamPrecision.setText(selParam.getPrecision());
 						textFieldParamDimension.setText(selParam.getDimension());
 
-						//System.out.println("DEBUG: PDLEditorApp.ctor: param required is "+selParam.getRequired());
+						// System.out.println("DEBUG: PDLEditorApp.ctor: param required is "+selParam.getRequired());
 						checkboxParamReq.setSelected(selParam.getRequired());
 
 					} else {
@@ -1084,12 +1193,12 @@ public class PDLEditorApp {
 						textFieldParamType.setText("");
 						textFieldParamUCD.setText("");
 						textFieldParamUType.setText("");
-						textFieldParamSkoss.setText("");
+						textFieldParamSkos.setText("");
 						textFieldParamUnit.setText("");
 						textFieldParamPrecision.setText("");
 						textFieldParamDimension.setText("");
 						checkboxParamReq.setSelected(false);
-						
+
 					}
 				}
 
@@ -1107,7 +1216,8 @@ public class PDLEditorApp {
 
 				ParameterDialog newParameterDialog = new ParameterDialog(
 						ParameterDialog.ParameterDialogModeCreate, mapParams,
-						comboBoxModelParams, comboBoxParams, mapExps, comboBoxModelExps);
+						comboBoxModelParams, comboBoxParams, mapExps,
+						comboBoxModelExps);
 				newParameterDialog.setLocationRelativeTo(appFrame); // dialog
 																	// must
 																	// appear in
@@ -1270,7 +1380,7 @@ public class PDLEditorApp {
 		panelParamsProperties.setLayout(null);
 
 		JLabel lblParamName = new JLabel("Name: ");
-		lblParamName.setBounds(6, 12, 44, 16);
+		lblParamName.setBounds(6, 12, 93, 16);
 		panelParamsProperties.add(lblParamName);
 
 		textFieldParamName = new JTextField();
@@ -1281,11 +1391,11 @@ public class PDLEditorApp {
 		panelParamsProperties.add(textFieldParamName);
 
 		JLabel lblParamType = new JLabel("Type:");
-		lblParamType.setBounds(6, 36, 61, 16);
+		lblParamType.setBounds(6, 36, 93, 16);
 		panelParamsProperties.add(lblParamType);
 
 		JLabel lblParamUcd = new JLabel("UCD:");
-		lblParamUcd.setBounds(6, 64, 61, 16);
+		lblParamUcd.setBounds(6, 64, 93, 16);
 		panelParamsProperties.add(lblParamUcd);
 
 		textFieldParamUCD = new JTextField();
@@ -1296,7 +1406,7 @@ public class PDLEditorApp {
 		panelParamsProperties.add(textFieldParamUCD);
 
 		JLabel lblParamUtype = new JLabel("UType:");
-		lblParamUtype.setBounds(6, 85, 61, 16);
+		lblParamUtype.setBounds(6, 85, 93, 16);
 		panelParamsProperties.add(lblParamUtype);
 
 		textFieldParamUType = new JTextField();
@@ -1306,18 +1416,18 @@ public class PDLEditorApp {
 
 		panelParamsProperties.add(textFieldParamUType);
 
-		JLabel lblParamSkoss = new JLabel("SkossConcept:");
-		lblParamSkoss.setBounds(8, 107, 99, 16);
-		panelParamsProperties.add(lblParamSkoss);
+		JLabel lblParamSkos = new JLabel("Skos Concept:");
+		lblParamSkos.setBounds(8, 107, 99, 16);
+		panelParamsProperties.add(lblParamSkos);
 
-		textFieldParamSkoss = new JTextField();
-		textFieldParamSkoss.setEditable(false);
-		textFieldParamSkoss.setBounds(105, 102, 134, 28);
-		panelParamsProperties.add(textFieldParamSkoss);
-		textFieldParamSkoss.setColumns(10);
+		textFieldParamSkos = new JTextField();
+		textFieldParamSkos.setEditable(false);
+		textFieldParamSkos.setBounds(105, 102, 134, 28);
+		panelParamsProperties.add(textFieldParamSkos);
+		textFieldParamSkos.setColumns(10);
 
 		JLabel lblParamUnit = new JLabel("Unit:");
-		lblParamUnit.setBounds(6, 128, 61, 16);
+		lblParamUnit.setBounds(6, 128, 93, 16);
 		panelParamsProperties.add(lblParamUnit);
 
 		textFieldParamUnit = new JTextField();
@@ -1327,11 +1437,11 @@ public class PDLEditorApp {
 		textFieldParamUnit.setColumns(10);
 
 		JLabel lblParamPrecision = new JLabel("Precision:");
-		lblParamPrecision.setBounds(6, 177, 65, 16);
+		lblParamPrecision.setBounds(6, 177, 93, 16);
 		panelParamsProperties.add(lblParamPrecision);
 
 		JLabel lblParamDimension = new JLabel("Dimension:");
-		lblParamDimension.setBounds(6, 154, 87, 16);
+		lblParamDimension.setBounds(6, 154, 93, 16);
 		panelParamsProperties.add(lblParamDimension);
 
 		textFieldParamPrecision = new JTextField();
@@ -1351,7 +1461,7 @@ public class PDLEditorApp {
 		textFieldParamType.setBounds(105, 30, 134, 28);
 		panelParamsProperties.add(textFieldParamType);
 		textFieldParamType.setColumns(10);
-		
+
 		checkboxParamReq = new JCheckBox("Req");
 		checkboxParamReq.setEnabled(false);
 		checkboxParamReq.setBounds(244, 8, 128, 23);
@@ -1360,7 +1470,7 @@ public class PDLEditorApp {
 		// ---------- Parameter Groups Module ----------
 
 		JLabel lblParametersModule = new JLabel("Parameters Module");
-		lblParametersModule.setBounds(6, 18, 128, 16);
+		lblParametersModule.setBounds(6, 18, 475, 16);
 		appFrame.getContentPane().add(lblParametersModule);
 
 		JScrollPane scrollPaneGroups = new JScrollPane();
@@ -1380,8 +1490,7 @@ public class PDLEditorApp {
 															// selection in tree
 		treeGroups.setShowsRootHandles(true); // ?
 
-		
-		if(debugCreateParams) {
+		if (debugCreateParams) {
 			// for debug
 			PDLGroup testGroup1 = new PDLGroup("TG1");
 			testGroup1.addPDLParam("TP1");
@@ -1389,7 +1498,7 @@ public class PDLEditorApp {
 					testGroup1);
 			treeModelGroups.insertNodeInto(testNode1,
 					(MutableTreeNode) treeModelGroups.getRoot(), 0);
-	
+
 			// for debug
 			PDLGroup testGroup2 = new PDLGroup("TG2");
 			testGroup2.addPDLParam("TP2");
@@ -1398,12 +1507,12 @@ public class PDLEditorApp {
 			treeModelGroups.insertNodeInto(testNode2,
 					(MutableTreeNode) treeModelGroups.getRoot(), 1);
 
-		}	
-			
+		}
+
 		scrollPaneGroups.setViewportView(treeGroups);
 
 		JLabel lblParameterGroupsModule = new JLabel("Parameter Groups Module");
-		lblParameterGroupsModule.setBounds(500, 18, 175, 16);
+		lblParameterGroupsModule.setBounds(500, 18, 475, 16);
 		appFrame.getContentPane().add(lblParameterGroupsModule);
 
 		JButton btnNewGroup = new JButton("New Group");
@@ -1618,21 +1727,19 @@ public class PDLEditorApp {
 		mapExps = new TreeMap<String, Expression>();
 
 		JLabel lblExpressionsModule = new JLabel("Expressions Module");
-		lblExpressionsModule.setBounds(6, 267, 148, 16);
+		lblExpressionsModule.setBounds(6, 267, 475, 16);
 		appFrame.getContentPane().add(lblExpressionsModule);
 
 		JSplitPane splitPaneExps = new JSplitPane();
 		splitPaneExps.setBounds(6, 295, 475, 180);
-		//splitPaneExps.
+		// splitPaneExps.
 		appFrame.getContentPane().add(splitPaneExps);
 
 		JPanel panelExpsMenu = new JPanel();
 		splitPaneExps.setLeftComponent(panelExpsMenu);
 		panelExpsMenu.setLayout(new GridLayout(0, 1, 0, 0));
 
-		
-		
-		if(debugCreateParams) {
+		if (debugCreateParams) {
 			// create a constant for creating expressions
 			List<String> constantValues1 = new ArrayList<String>();
 			constantValues1.add("1");
@@ -1640,15 +1747,15 @@ public class PDLEditorApp {
 					.withConstant(constantValues1).withConstantType(
 							ParameterType.INTEGER);
 			mapExps.put("_one", oneExp);
-	
+
 			// add a dummy expression for testing
 			List<String> constantValues2 = new ArrayList<String>();
-			constantValues2.add("1.0");		
+			constantValues2.add("1.0");
 			AtomicConstantExpression testExp1 = new AtomicConstantExpression()
 					.withConstant(constantValues2).withConstantType(
 							ParameterType.REAL);
 			mapExps.put("TE1", testExp1);
-	
+
 			// add a dummy expression for testing
 			List<String> constantValues3 = new ArrayList<String>();
 			constantValues3.add("2.0");
@@ -1658,7 +1765,7 @@ public class PDLEditorApp {
 			mapExps.put("TE2", testExp2);
 
 		}
-			
+
 		comboBoxModelExps = new MapComboBoxModel(mapExps);
 
 		comboBoxExps = new JComboBox(comboBoxModelExps);
@@ -1673,22 +1780,20 @@ public class PDLEditorApp {
 				String cmd = e.getActionCommand();
 				if (cmd.equals("comboBoxChanged")) {
 					String selExpName = (String) comboBoxExps.getSelectedItem();
-				
-					
+
 					if (selExpName != null) {
 						// get the expression and its class
 						Expression selExp = mapExps.get(selExpName);
 						Class selExpClass = selExp.getClass();
-					
+
 						// these will be needed at the end of this block
 						Expression expPower = null;
 						Operation expOperation = null;
-						
-						
-						// Redraw panelExpsProperties with the common controls 
+
+						// Redraw panelExpsProperties with the common controls
 						panelExpsProperties.removeAll();
 						panelExpsProperties.setVisible(false);
-						
+
 						JLabel lblExpClass = new JLabel("Class:");
 						lblExpClass.setBounds(6, 6, 61, 16);
 						panelExpsProperties.add(lblExpClass);
@@ -1698,8 +1803,7 @@ public class PDLEditorApp {
 						textFieldExpClass.setBounds(74, 1, 124, 28);
 						panelExpsProperties.add(textFieldExpClass);
 						textFieldExpClass.setColumns(10);
-						
-						
+
 						JLabel lblExpPower = new JLabel("Power:");
 						lblExpPower.setBounds(6, 90, 61, 16);
 						panelExpsProperties.add(lblExpPower);
@@ -1709,7 +1813,7 @@ public class PDLEditorApp {
 						textFieldExpPower.setBounds(74, 83, 124, 28);
 						panelExpsProperties.add(textFieldExpPower);
 						textFieldExpPower.setColumns(10);
-						
+
 						JLabel lblExpOperation = new JLabel("Operation:");
 						lblExpOperation.setBounds(6, 118, 71, 16);
 						panelExpsProperties.add(lblExpOperation);
@@ -1718,8 +1822,8 @@ public class PDLEditorApp {
 						textFieldExpOperation.setEditable(false);
 						textFieldExpOperation.setBounds(74, 112, 124, 28);
 						panelExpsProperties.add(textFieldExpOperation);
-						textFieldExpOperation.setColumns(10);							
-						
+						textFieldExpOperation.setColumns(10);
+
 						JLabel lblExpOperand = new JLabel("Operand:");
 						lblExpOperand.setBounds(6, 146, 61, 16);
 						panelExpsProperties.add(lblExpOperand);
@@ -1728,12 +1832,12 @@ public class PDLEditorApp {
 						textFieldExpOperand.setEditable(false);
 						textFieldExpOperand.setBounds(74, 142, 124, 28);
 						panelExpsProperties.add(textFieldExpOperand);
-						textFieldExpOperand.setColumns(10);							
-						
-						
+						textFieldExpOperand.setColumns(10);
+
 						if (selExpClass == AtomicConstantExpression.class) {
-							
-							// Draw the controls for AtomicConstantExpression on panelExpsProperties
+
+							// Draw the controls for AtomicConstantExpression on
+							// panelExpsProperties
 							JLabel lblExpType = new JLabel("Type:");
 							lblExpType.setBounds(6, 34, 61, 16);
 							panelExpsProperties.add(lblExpType);
@@ -1743,8 +1847,7 @@ public class PDLEditorApp {
 							textFieldExpType.setBounds(74, 29, 124, 28);
 							panelExpsProperties.add(textFieldExpType);
 							textFieldExpType.setColumns(10);
-							
-							
+
 							JLabel lblExpConstant = new JLabel("Constant:");
 							lblExpConstant.setBounds(6, 62, 61, 16);
 							panelExpsProperties.add(lblExpConstant);
@@ -1754,35 +1857,32 @@ public class PDLEditorApp {
 							textFieldExpConstant.setBounds(74, 57, 124, 28);
 							panelExpsProperties.add(textFieldExpConstant);
 							textFieldExpConstant.setColumns(10);
-							
-							
+
 							// make the panel visible
 							panelExpsProperties.setVisible(true);
-							
+
 							// Fill the controls of panelExpsProperties
 							textFieldExpClass.setText("ACE");
-							
-							
+
 							AtomicConstantExpression selACE = (AtomicConstantExpression) selExp;
 							ParameterType selExpType = selACE.getConstantType();
 							textFieldExpType.setText(selExpType.toString());
-							
+
 							List<String> selExpConstant = selACE.getConstant();
-							String constant = Utilities.getInstance().expressionConstantToString(selExpConstant);
+							String constant = Utilities.getInstance()
+									.expressionConstantToString(selExpConstant);
 							textFieldExpConstant.setText(constant);
-							
-							
+
 							// get the power and operation of the ACE
 							expPower = selACE.getPower();
 							expOperation = selACE.getOperation();
-							
-							
-							
+
 						}
 						if (selExpClass == AtomicParameterExpression.class) {
-							
-							// Draw the controls for AtomicParameterExpression on panelExpsProperties
-							
+
+							// Draw the controls for AtomicParameterExpression
+							// on panelExpsProperties
+
 							JLabel lblExpParam = new JLabel("Param:");
 							lblExpParam.setBounds(6, 34, 61, 16);
 							panelExpsProperties.add(lblExpParam);
@@ -1792,10 +1892,10 @@ public class PDLEditorApp {
 							textFieldExpParam.setBounds(74, 29, 124, 28);
 							panelExpsProperties.add(textFieldExpParam);
 							textFieldExpParam.setColumns(10);
-							
+
 							// make the panel visible
 							panelExpsProperties.setVisible(true);
-							
+
 							// Fill the controls of panelExpsProperties
 							textFieldExpClass.setText("APE");
 							AtomicParameterExpression selAPE = (AtomicParameterExpression) selExp;
@@ -1815,20 +1915,18 @@ public class PDLEditorApp {
 																// name
 							ParameterType selExpParameterType = selExpParameter
 									.getType(); // get the PDLParameter type
-							
-							
+
 							textFieldExpParam.setText(selExpParameterName);
-							
-							
+
 							// get the power and operation of the APE
 							expPower = selAPE.getPower();
 							expOperation = selAPE.getOperation();
-							
-							
+
 						}
 						if (selExpClass == ParenthesisContent.class) {
-							// Draw the controls for AtomicParameterExpression on panelExpsProperties
-							
+							// Draw the controls for AtomicParameterExpression
+							// on panelExpsProperties
+
 							JLabel lblExpExp = new JLabel("Exp:");
 							lblExpExp.setBounds(6, 34, 61, 16);
 							panelExpsProperties.add(lblExpExp);
@@ -1838,38 +1936,46 @@ public class PDLEditorApp {
 							textFieldExpExp.setBounds(74, 29, 124, 28);
 							panelExpsProperties.add(textFieldExpExp);
 							textFieldExpExp.setColumns(10);
-							
-							
+
 							// make the panel visible
 							panelExpsProperties.setVisible(true);
-							
+
 							// Fill the controls of panelExpsProperties
 							textFieldExpClass.setText("PCE");
 							ParenthesisContent selPCE = (ParenthesisContent) selExp;
-							
+
 							// get the expression inside the parenthesis
-							Expression selExpInside = selPCE.getExpression(); // get the expression in the ParenthesisContent Expression
-							
+							Expression selExpInside = selPCE.getExpression(); // get
+																				// the
+																				// expression
+																				// in
+																				// the
+																				// ParenthesisContent
+																				// Expression
+
 							// get the name of the expression selExpInside
-							// from http://stackoverflow.com/questions/1383797/java-hashmap-how-to-get-key-from-value
+							// from
+							// http://stackoverflow.com/questions/1383797/java-hashmap-how-to-get-key-from-value
 							String key = "unknown";
-							Iterator<Entry<String, Expression>> iter = mapExps.entrySet().iterator();
+							Iterator<Entry<String, Expression>> iter = mapExps
+									.entrySet().iterator();
 							while (iter.hasNext()) {
-							    Entry<String, Expression> entry = iter.next();
-							    if (entry.getValue().equals(selExpInside)) {
-							        key = entry.getKey();
-							    }
+								Entry<String, Expression> entry = iter.next();
+								if (entry.getValue().equals(selExpInside)) {
+									key = entry.getKey();
+								}
 							}
-							
+
 							textFieldExpExp.setText(key);
-							
+
 							// get the power and operation of the PCE
 							expPower = selPCE.getPower();
 							expOperation = selPCE.getOperation();
 						}
 						if (selExpClass == FunctionExpression.class) {
-							// Draw the controls for AtomicParameterExpression on panelExpsProperties
-							
+							// Draw the controls for AtomicParameterExpression
+							// on panelExpsProperties
+
 							JLabel lblExpExp = new JLabel("Exp:");
 							lblExpExp.setBounds(6, 34, 61, 16);
 							panelExpsProperties.add(lblExpExp);
@@ -1879,8 +1985,7 @@ public class PDLEditorApp {
 							textFieldExpExp.setBounds(74, 29, 124, 28);
 							panelExpsProperties.add(textFieldExpExp);
 							textFieldExpExp.setColumns(10);
-							
-							
+
 							JLabel lblExpFunction = new JLabel("Function:");
 							lblExpFunction.setBounds(6, 62, 61, 16);
 							panelExpsProperties.add(lblExpFunction);
@@ -1890,98 +1995,94 @@ public class PDLEditorApp {
 							textFieldExpFunction.setBounds(74, 57, 124, 28);
 							panelExpsProperties.add(textFieldExpFunction);
 							textFieldExpFunction.setColumns(10);
-							
-							
-							
+
 							// make the panel visible
 							panelExpsProperties.setVisible(true);
-							
+
 							textFieldExpClass.setText("FE");
 							FunctionExpression selFE = (FunctionExpression) selExp;
-							
-							
-							
+
 							// get the function
 							Function selExpFun = selFE.getFunction();
-							
+
 							// get the expression inside the function
 							Expression selExpInside = selExpFun.getExpression();
-							
+
 							// get the name of the expression selExpInside
-							// from http://stackoverflow.com/questions/1383797/java-hashmap-how-to-get-key-from-value
+							// from
+							// http://stackoverflow.com/questions/1383797/java-hashmap-how-to-get-key-from-value
 							String key = "unknown";
-							
-							
-							Iterator<Entry<String, Expression>> iter = mapExps.entrySet().iterator();
+
+							Iterator<Entry<String, Expression>> iter = mapExps
+									.entrySet().iterator();
 							while (iter.hasNext()) {
-							    Entry<String, Expression> entry = iter.next();
-							    if (entry.getValue().equals(selExpInside)) {
-							        key = entry.getKey();
-							    }
+								Entry<String, Expression> entry = iter.next();
+								if (entry.getValue().equals(selExpInside)) {
+									key = entry.getKey();
+								}
 							}
-							
-							
+
 							textFieldExpExp.setText(key);
-							
-							
-							
+
 							// get the string representing the function name
-							String function = selExpFun.getFunctionName().toString();
-							
+							String function = selExpFun.getFunctionName()
+									.toString();
+
 							textFieldExpFunction.setText(function);
-		
+
 							// get the power and operation of the FE
 							expPower = selFE.getPower();
 							expOperation = selFE.getOperation();
 						}
 
-						
-					
 						// display the power for the selected expression
 						String power = "null";
-						if(expPower!=null) {
-							// we have to assume that the power is a AtomicConstantExpression here to getConstant !
-							power = Utilities.getInstance().expressionConstantToString(((AtomicConstantExpression) expPower).getConstant());
+						if (expPower != null) {
+							// we have to assume that the power is a
+							// AtomicConstantExpression here to getConstant !
+							power = Utilities
+									.getInstance()
+									.expressionConstantToString(
+											((AtomicConstantExpression) expPower)
+													.getConstant());
 						}
 						textFieldExpPower.setText(power);
-						
-						// display the operation and operand for the selected expression
+
+						// display the operation and operand for the selected
+						// expression
 						String operation = "null";
 						String operand = "null";
-						
-						if(expOperation!=null) {
-							operation = expOperation.getOperationType().toString();
-							Expression expOperand = (Expression) expOperation.getExpression();
-							
-							String expOperandName=new String("");
-							if(expOperand!=null) {
-								for(Entry<String,Expression> entry : mapExps.entrySet()) {
-									if(entry.getValue().equals(expOperand)) {
-										expOperandName=entry.getKey();
+
+						if (expOperation != null) {
+							operation = expOperation.getOperationType()
+									.toString();
+							Expression expOperand = (Expression) expOperation
+									.getExpression();
+
+							String expOperandName = new String("");
+							if (expOperand != null) {
+								for (Entry<String, Expression> entry : mapExps
+										.entrySet()) {
+									if (entry.getValue().equals(expOperand)) {
+										expOperandName = entry.getKey();
 									}
 								}
-								
+
 								operand = expOperandName;
 							}
 						}
 						textFieldExpOperation.setText(operation);
 						textFieldExpOperand.setText(operand);
-						
-						
-						
-						
-						
-						
+
 					} else {
-						
-						//textFieldExpClass.setText("");
-						//textFieldExpType.setText("");
+
+						// textFieldExpClass.setText("");
+						// textFieldExpType.setText("");
 
 					}
 				}
 			}
 
-			
 		});
 
 		final JButton btnNewAtomicConstantExpression = new JButton(
@@ -2134,8 +2235,6 @@ public class PDLEditorApp {
 																		// select
 																		// any
 
-							
-
 								} else {
 									comboBoxExps.setSelectedIndex(0); // select
 																		// the
@@ -2158,7 +2257,7 @@ public class PDLEditorApp {
 
 		});
 
-	    panelExpsProperties = new JPanel();
+		panelExpsProperties = new JPanel();
 		splitPaneExps.setRightComponent(panelExpsProperties);
 		panelExpsProperties.setLayout(null);
 
@@ -2176,23 +2275,23 @@ public class PDLEditorApp {
 
 		mapCrits = new TreeMap<String, PDLCriterion>();
 
-		if(debugCreateParams) {
+		if (debugCreateParams) {
 			// create dummy criterion for debug
 			PDLCriterion testCrit1 = new PDLCriterion();
 			testCrit1.setCExp("TE1");
 			testCrit1.setType("ValueSmallerThan");
 			testCrit1.addExp("TE2");
-	
+
 			mapCrits.put("TC1", testCrit1);
-	
+
 			// create dummy criterion for debug
 			PDLCriterion testCrit2 = new PDLCriterion();
 			testCrit2.setCExp("TE2");
 			testCrit2.setType("IsNull");
-	
+
 			mapCrits.put("TC2", testCrit2);
 		}
-			
+
 		listModelCrits = new MapListModel(mapCrits);
 
 		listCrits = new JList(listModelCrits);
@@ -2303,11 +2402,11 @@ public class PDLEditorApp {
 		});
 
 		JLabel lblCriterionsModule = new JLabel("Criterions Module");
-		lblCriterionsModule.setBounds(500, 267, 133, 16);
+		lblCriterionsModule.setBounds(500, 267, 475, 16);
 		appFrame.getContentPane().add(lblCriterionsModule);
 
 		JLabel lblStatementsModule = new JLabel("Statements Module");
-		lblStatementsModule.setBounds(6, 487, 128, 16);
+		lblStatementsModule.setBounds(6, 487, 475, 16);
 		appFrame.getContentPane().add(lblStatementsModule);
 
 		JPanel panelStats = new JPanel();
@@ -2322,19 +2421,19 @@ public class PDLEditorApp {
 
 		mapStats = new TreeMap<String, PDLStatement>();
 
-		
-		if(debugCreateParams) {
+		if (debugCreateParams) {
 			PDLStatement testStat1 = new PDLStatement();
 			testStat1.setType("IfThen");
 			testStat1.setCrit1("TC1");
 			testStat1.setCrit2("TC2");
 			testStat1.setGroup("TG1");
-		
+
 			mapStats.put("TS1", testStat1);
 		}
-			
+
 		listModelStats = new MapListModel(mapStats);
 		listStats = new JList(listModelStats);
+		listStats.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		scrollPaneStats.setViewportView(listStats);
 
 		MapListCellRenderer listStatsRenderer = new MapListCellRenderer();
@@ -2393,23 +2492,23 @@ public class PDLEditorApp {
 		panelService.setLayout(null);
 
 		JLabel lblServiceId = new JLabel("Service ID: ");
-		lblServiceId.setBounds(6, 6, 81, 16);
+		lblServiceId.setBounds(6, 6, 109, 16);
 		panelService.add(lblServiceId);
 
 		JLabel lblServiceName = new JLabel("Name");
-		lblServiceName.setBounds(6, 34, 142, 16);
+		lblServiceName.setBounds(6, 34, 109, 16);
 		panelService.add(lblServiceName);
 
 		JLabel lblServiceInputs = new JLabel("Inputs:");
-		lblServiceInputs.setBounds(6, 62, 61, 16);
+		lblServiceInputs.setBounds(6, 62, 109, 16);
 		panelService.add(lblServiceInputs);
 
 		JLabel lblServiceOutputs = new JLabel("Outputs:");
-		lblServiceOutputs.setBounds(6, 90, 81, 16);
+		lblServiceOutputs.setBounds(6, 90, 109, 16);
 		panelService.add(lblServiceOutputs);
 
 		JLabel lblServiceDescription = new JLabel("Description:");
-		lblServiceDescription.setBounds(6, 118, 99, 16);
+		lblServiceDescription.setBounds(6, 118, 109, 16);
 		panelService.add(lblServiceDescription);
 
 		JScrollPane scrollPaneServiceDesc = new JScrollPane();
@@ -2454,7 +2553,7 @@ public class PDLEditorApp {
 		treeModelGroups.addTreeModelListener(treeModelGroupsListener);
 
 		JLabel lblServiceModule = new JLabel("Service Module");
-		lblServiceModule.setBounds(500, 487, 94, 16);
+		lblServiceModule.setBounds(500, 487, 475, 16);
 		appFrame.getContentPane().add(lblServiceModule);
 
 		btnLoadDescription = new JButton("Load Description");
@@ -2463,7 +2562,7 @@ public class PDLEditorApp {
 
 		btnLoadDescription.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				loadAllFromNeodatis();
+				loadAllFromNeodatis(null); // null=>file chooser will be used
 			}
 		});
 
@@ -2477,51 +2576,48 @@ public class PDLEditorApp {
 			}
 		});
 
-		
 		JButton btnExportToXML = new JButton("Export to XML");
 		btnExportToXML.setBounds(419, 726, 148, 29);
 		appFrame.getContentPane().add(btnExportToXML);
-		
-		
-		
+
 		btnExportToXML.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				exportToXML();
 			}
 		});
-		
+
 		JButton btnShowChildren = new JButton("Show Children"); // for debug
 		btnShowChildren.setBounds(873, 224, 117, 29);
 		appFrame.getContentPane().add(btnShowChildren);
-		
+
 		btnShowChildren.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// get node selected
 				DefaultMutableTreeNode selNode = (DefaultMutableTreeNode) treeGroups
 						.getLastSelectedPathComponent();
-				
+
 				PDLGroup selGroup = (PDLGroup) selNode.getUserObject();
 				String selGroupName = selGroup.getName();
-				
-				System.out.println("DEBUG: Selected group name="+selGroupName);
-				
+
+				System.out
+						.println("DEBUG: Selected group name=" + selGroupName);
+
 				ArrayList<PDLGroup> children1 = new ArrayList<PDLGroup>();
-				ArrayList<PDLGroup> children = selGroup.getChildren((DefaultMutableTreeNode) treeModelGroups.getRoot(), children1);
-				
-				for(PDLGroup child: children) {
-					
+				ArrayList<PDLGroup> children = selGroup.getChildren(
+						(DefaultMutableTreeNode) treeModelGroups.getRoot(),
+						children1);
+
+				for (PDLGroup child : children) {
+
 					String childName = child.getName();
-					
-					System.out.println("DEBUG: Child="+childName);
-					
-					
+
+					System.out.println("DEBUG: Child=" + childName);
+
 				}
-				
-				
-				
+
 			}
 		});
-	
+
 	}
 
 	public static String getAppVersion() {
