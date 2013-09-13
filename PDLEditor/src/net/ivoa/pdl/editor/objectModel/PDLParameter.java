@@ -7,7 +7,7 @@ public class PDLParameter {
 	ParameterType type;
 	String UCD;
 	String UType;
-	String skoss;
+	String skos;
 	String unit;
 	String precision; // name of an expression
 	String dimension; // name of an expression
@@ -53,8 +53,8 @@ public class PDLParameter {
 		UType = u;
 	}
 
-	public String getSkoss() {
-		return skoss;
+	public String getSkos() {
+		return skos;
 	}
 
 	public void setUnit(String u) {
@@ -73,8 +73,8 @@ public class PDLParameter {
 		return dimension;
 	}
 
-	public void setSkoss(String s) {
-		skoss = s;
+	public void setSkos(String s) {
+		skos = s;
 	}
 
 	public void setPrecision(String p) {

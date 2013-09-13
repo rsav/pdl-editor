@@ -41,11 +41,11 @@ public class AboutDialog extends JDialog {
 		contentPanel.setLayout(null);
 		
 		JLabel lblPdlEditor = new JLabel(PDLEditorApp.getAppName());
-		lblPdlEditor.setBounds(16, 19, 113, 16);
+		lblPdlEditor.setBounds(16, 19, 278, 16);
 		contentPanel.add(lblPdlEditor);
 		
 		JLabel lblVersion = new JLabel("Version: "+PDLEditorApp.getAppVersion());
-		lblVersion.setBounds(16, 47, 90, 16);
+		lblVersion.setBounds(16, 47, 278, 16);
 		contentPanel.add(lblVersion);
 		
 		String[] authors = PDLEditorApp.getAppAuthors();

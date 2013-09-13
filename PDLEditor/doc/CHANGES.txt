@@ -2,11 +2,27 @@ TODO and CHANGES
 
 TODO
 
-*** Linux: UIManager.setLookAndFeel(lookAndFeel); cf http://docs.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html#example
+*** Linux: 
+
+UIManager.setLookAndFeel(lookAndFeel); cf http://docs.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html#example
 
 *** - When deleting the last expression, the panel on the right of the expression module should be empty
 
+*** After loading a description .pdl file the Statements module do not show them
+(it is necessary to create/delete a statement to see them)
+
+
 CHANGES
+
+
+
+v0.93 2013-09-12 
+- resized labels to the max extent so the app displays well on Linux
+- changed all occurences of skoss to skos (one s) (except one which calls PDLModel)
+- added menu items "Export To XML","Load PDL Description","Save PDL Description" into File menu.
+- added possibility to load a PDL description file from the command line (the filename must be supplied as the first argument)
+- added window title "PDL Editor"
+- corrected bug when restoring a PDL description file the list of statements was not redrawn
 
 v0.92 2013-09-12 
 - corrected bug in PDLEditorApp.java l 1954 where operand name was not correctly set when displaying an APE
